@@ -5,6 +5,28 @@
       "firebase.json",
       "**/.*",
       "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "regex": "^/music/([^/]+?)(?:/)?$",
+        "destination": "/music/[music].html"
+      },
+      {
+        "regex": "^/profile/([^/]+?)(?:/)?$",
+        "destination": "/profile/[profile].html"
+      },
+      {
+        "regex":"^/top(?:/)?$",
+        "destination":"/top.html"
+      },
+      {
+        "regex":"^/settings/profile(?:/)?$",
+        "destination":"/settings/profile.html"
+      },
+      {
+        "regex":"^/music(?:/)?$",
+        "destination":"/music.html"
+      }
     ]
   }
 }
