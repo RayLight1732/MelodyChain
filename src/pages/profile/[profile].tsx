@@ -1,14 +1,11 @@
-import { Loading } from "@/components/loading";
-import { JumpableMusicPreview, MusicPreview } from "@/components/music";
+import { JumpableMusicPreview } from "@/components/music";
 import { useMyHeaderImage, useMyProfile, useMyProfileImage, useMyUid } from "@/components/profile";
 import { Music, getInvolvedMusic } from "@/libs/music";
-import { Profile, getHeaderImageUrl, getProfile, getProfileImageUrl, getProfileImageUrlById, useHeaderImage, useProfile, useProfileImage } from "@/libs/profile";
-import { FetchResult, indexToPartName, numPartToBoolPart } from "@/libs/utils";
-import { DocumentData, DocumentSnapshot } from "firebase/firestore";
+import { Profile, useHeaderImage, useProfile, useProfileImage } from "@/libs/profile";
+import { indexToPartName, numPartToBoolPart } from "@/libs/utils";
 import Head from "next/head";
 import { useRouter } from "next/router";
 import React, { useEffect, useState } from "react";
-import useSWR from "swr";
 
 export default function ProfileView() {
   const router = useRouter();
