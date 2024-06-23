@@ -1,6 +1,5 @@
 import { JumpableMusicPreview, MusicPreview } from "@/components/music";
 import { Music, getMusic } from "@/libs/music";
-import { randomUUID } from "crypto";
 import { useEffect, useState } from "react";
 
 export default function Top() {

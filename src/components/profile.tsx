@@ -23,6 +23,7 @@ export function ProfileContextProvider({ uid, children }: { uid: string; childre
       uid,
       (profile) => {
         setProfile(new FetchResult(FetchStatus.SUCCESS, profile));
+        console.log("set profile");
       },
       (error) => {
         console.error(error.message);

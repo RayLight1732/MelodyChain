@@ -51,7 +51,7 @@ export function usePageLeaveConfirmation(showDialog: () => boolean, dialogFactor
     if (nextURL) {
       router.push(nextURL);
     }
-  }, [setOpen]);
+  }, [router, setOpen]);
   const onCancel = useCallback(() => {
     setOpen(false);
     ignoreRef.current = false;
@@ -94,7 +94,7 @@ export function usePageLeaveConfirmation(showDialog: () => boolean, dialogFactor
         {dialogFactory(onConfirm, onCancel)}
       </CustomDialog>
     );
-  }, [onConfirm, onCancel, isOpen]);
+  }, [onConfirm, onCancel, isOpen, dialogFactory]);
   if (isOpen) {
     console.log("element");
     return element;

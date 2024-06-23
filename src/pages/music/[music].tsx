@@ -1,11 +1,5 @@
 import { MusicPlayer, MusicPreview } from "@/components/music";
-import {
-  Music,
-  getAuthorProfileURLs,
-  getMusicDetail,
-  getMusicURLs,
-  getThumbnailURL,
-} from "@/libs/music";
+import { Music, getMusicDetail } from "@/libs/music";
 import { useRouter } from "next/router";
 import React, { useEffect, useState } from "react";
 

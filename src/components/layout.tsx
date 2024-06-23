@@ -1,18 +1,17 @@
 import { onAuthStateChanged } from "@/libs/auth";
-import React, { Dispatch, ReactNode, createContext, useContext, useEffect, useMemo, useState } from "react";
+import React, { ReactNode, useEffect, useMemo, useState } from "react";
 import Login from "./login";
 import { Loading } from "./loading";
 import Link from "next/link";
 import { auth } from "@/libs/initialize";
-import { Profile, getHeaderImageUrlById, getProfileImageUrlById, onProfileUpdated } from "@/libs/profile";
-import { FetchResult, FetchStatus } from "@/libs/utils";
-import { HeaderImageContextProvider, ProfileContextProvider, ProfileImageContextProvider, UidContextProvider, useMyHeaderImage, useMyProfile, useMyProfileImage } from "./profile";
+import { useMyProfileImage } from "./profile";
+import dynamic from "next/dynamic";
 
 export function Header() {
   return (
     <header className="flex justify-between items-center px-5 py-2.5 border-b-2 divide-solid border-secondary bg-white z-40">
       <div className="logo left-logo">
-        <img src="/images/logo.png" alt="" className="w-[90px] h-auto" />
+        <img src="/images/logo_small.png" alt="" className="w-[90px] h-auto" />
       </div>
       <div className="logo right-logo">
         <img src="/images/bell.png" alt="" />
@@ -43,6 +42,10 @@ export function Footer() {
     </footer>
   );
 }
+
+const DataProvider = dynamic(() => import("./dataProvider"), {
+  loading: () => <p>Loading...</p>,
+});
 
 export function AuthStateManager({
   onAuthenticated,
@@ -87,70 +90,13 @@ export function AuthStateManager({
     return loadingComponent;
   } else if (authState == 1) {
     return (
-      <ProfileProvider loadingComponent={loadingComponent} requireProfile={requireProfile} uid={auth.currentUser!.uid}>
+      <DataProvider loadingComponent={loadingComponent} requireProfile={requireProfile} uid={auth.currentUser!.uid}>
         {children}
-      </ProfileProvider>
+      </DataProvider>
     );
   } else if (authState == 2) {
     return <Login />;
   } else {
     return <h1>error</h1>;
-  }
-}
-
-export const audioContextProvider = createContext<AudioContext | null>(null);
-//TODO フックにまとめる
-function ProfileProvider({ uid, requireProfile, loadingComponent, children }: { uid: string; requireProfile: boolean; loadingComponent: ReactNode; children: ReactNode }) {
-  const [audioContext] = useState(new AudioContext());
-  useEffect(() => {
-    const eventName = typeof document.ontouchend !== "undefined" ? "touchend" : "mouseup";
-    document.addEventListener(eventName, initAudioContext);
-    function initAudioContext() {
-      document.removeEventListener(eventName, initAudioContext);
-      // wake up AudioContext
-      audioContext.resume();
-      console.log("resume");
-    }
-    return () => {
-      document.removeEventListener(eventName, initAudioContext);
-    };
-  });
-
-  return (
-    <audioContextProvider.Provider value={audioContext}>
-      <UidContextProvider uid={uid}>
-        <ProfileContextProvider uid={uid}>
-          <ProfileImageContextProvider uid={uid}>
-            <HeaderImageContextProvider uid={uid}>
-              <ProfileLoadObserver requireProfile={requireProfile} loadingComponent={loadingComponent}>
-                <div className="flex flex-col w-screen h-screen">
-                  <Header></Header>
-                  <div className="flex-grow overflow-y-auto w-screen" id="container">
-                    {children}
-                  </div>
-                  <Footer></Footer>
-                </div>
-              </ProfileLoadObserver>
-            </HeaderImageContextProvider>
-          </ProfileImageContextProvider>
-        </ProfileContextProvider>
-      </UidContextProvider>
-    </audioContextProvider.Provider>
-  );
-}
-
-function ProfileLoadObserver({ requireProfile, loadingComponent, children }: { requireProfile: boolean; loadingComponent: ReactNode; children: ReactNode }) {
-  const [myProfile] = useMyProfile();
-  const [myProfileImage] = useMyProfileImage();
-  const [myHeaderImage] = useMyHeaderImage();
-
-  if (requireProfile) {
-    if (myProfile.getState() == FetchStatus.INIT || myProfileImage.getState() == FetchStatus.INIT || myHeaderImage.getState() == FetchStatus.INIT) {
-      return loadingComponent;
-    } else {
-      return children;
-    }
-  } else {
-    return children;
   }
 }

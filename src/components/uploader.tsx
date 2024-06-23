@@ -1,9 +1,10 @@
 import { FetchResult, FetchStatus, indexToPartName } from "@/libs/utils";
 import { useMyProfile } from "./profile";
 import { DispatchedMusic } from "@/libs/profile";
-import { useAudioManager, useMultipleTrackURLs } from "@/hooks/music";
+import { useMultipleTrackURLs } from "@/hooks/music";
 import { TrackPlayer } from "./music";
 import { useEffect, useState } from "react";
+import { useAudioManager } from "@/hooks/audioManager";
 
 export function useDispatchedMusic() {
   const [profile] = useMyProfile();

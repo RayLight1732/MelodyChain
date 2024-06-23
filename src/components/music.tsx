@@ -1,13 +1,11 @@
-import { Music, getAuthorProfileURLs, getMusicDetail, getMusicURLs, getThumbnailURL } from "@/libs/music";
-import { Dispatch, MouseEventHandler, ReactElement, SetStateAction, useContext, useEffect, useMemo, useRef, useState } from "react";
-import { buffer, text } from "stream/consumers";
+import { Music, getAuthorProfileURLs } from "@/libs/music";
+import { MouseEventHandler, useEffect, useState } from "react";
+
 import { PlayButton, SpinningLoader } from "./utlis";
 import { useRouter } from "next/router";
-import useSWR from "swr";
-import { error } from "console";
-import { audioContextProvider } from "./layout";
-import { useAudioManager, useMultipleTrackURLs, useThumbnailURL, useTrackURLs } from "@/hooks/music";
+import { useThumbnailURL, useTrackURLs } from "@/hooks/music";
 import { indexToPartName } from "@/libs/utils";
+import { useAudioManager } from "@/hooks/audioManager";
 
 export function JumpableMusicPreview({ music }: { music: Music | null | undefined }) {
   const router = useRouter();

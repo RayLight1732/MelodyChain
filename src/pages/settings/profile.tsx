@@ -41,7 +41,8 @@ export default function ProfileEditor() {
       !isSame(profile.getContent()?.part, partValueState[0])
     );
   }, [profile, profileBlobRef.current, headerBlobRef.current, nameValueState[0], favoriteValueState[0], partValueState[0]]);
-  const confirmDialog = usePageLeaveConfirmation(showDialog, (onConfirm, oncancel) => {
+
+  const dialogFactory = useCallback((onConfirm: () => void, oncancel: () => void) => {
     return (
       <div className="flex flex-col bg-white max-w-80 w-[80vw] p-8 rounded-xl">
         <p className="mx-auto text-warn text-lg font-bold">編集内容を破棄しますか</p>
@@ -54,7 +55,9 @@ export default function ProfileEditor() {
         </button>
       </div>
     );
-  });
+  }, []);
+
+  const confirmDialog = usePageLeaveConfirmation(showDialog, dialogFactory);
 
   const submitHandler = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();

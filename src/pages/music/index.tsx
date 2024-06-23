@@ -1,11 +1,10 @@
 import { ImageCropDialog } from "@/components/image";
-import { MusicPlayer } from "@/components/music";
 import { WIPMusicPlayer, useDispatchedMusic } from "@/components/uploader";
 import { CountableTextArea, showFileChoosePopup } from "@/components/utlis";
-import { useAudioContext } from "@/hooks/music";
-import { Music, uploadMusic } from "@/libs/music";
+import { useAudioContext } from "@/hooks/context";
+import { uploadMusic } from "@/libs/music";
 import { DEFAULT_THUMBNAIL_HEIGHT, DEFAULT_THUMBNAIL_WIDTH, FetchStatus, indexToPartName } from "@/libs/utils";
-import { Dispatch, ReactElement, SetStateAction, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Dispatch, ReactElement, SetStateAction, useCallback, useEffect, useRef, useState } from "react";
 
 const acceptType = "audio/wav,audio/mpeg,audio/midi";
 const beat = 4;
@@ -31,6 +30,7 @@ export default function Dispatched(): ReactElement {
     const content = dispatchedMusic.getContent();
     if (content) {
       console.log(content.getLimit());
+
       return (
         <>
           <div className="p-5">
@@ -114,7 +114,7 @@ function WarnMessage({ fileSelected, isValidFile, isValidating, tempo, duration 
       }
     }
   }
-  return <p className="invisible">""</p>;
+  return <p className="invisible">tmp</p>;
 }
 
 function canUploadFile(part: number, file: File | null, isValidFile: boolean, thumbnail: Blob | null, title: string): boolean {
