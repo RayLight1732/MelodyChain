@@ -120,7 +120,10 @@ function ProfileComponent({
         <div className=" border-secondary border rounded-md">
           <Panel
             selectors={["過去の作品", "いいね"]}
-            nodes={[<div>{profile ? <InvolvedMusic uid={profile.getUid()}></InvolvedMusic> : null}</div>, <div>{profile ? <GoodHistory uid={profile.getUid()}></GoodHistory> : null}</div>]}
+            nodes={[
+              <div key="過去の作品">{profile ? <InvolvedMusic uid={profile.getUid()}></InvolvedMusic> : null}</div>,
+              <div key="いいね">{profile ? <GoodHistory uid={profile.getUid()}></GoodHistory> : null}</div>,
+            ]}
           ></Panel>
         </div>
       </div>
