@@ -67,7 +67,6 @@ export function useMultipleTrackURLs(authorIDs: Array<string>, musicRefs: Array<
   useEffect(() => {
     setResult({ data: [...tmpData], error: [...tmpErrors] });
   }, [...tmpData, ...tmpErrors]);
-  //TODO　どうにかする
   return { data: result.data, isLoading: isLoading, error: result.data };
 }
 

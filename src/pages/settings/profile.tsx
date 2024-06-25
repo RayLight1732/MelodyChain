@@ -1,20 +1,9 @@
-import { Area, CropAreaSelector, ImageCropDialog, cropImage } from "@/components/image";
+import { ImageCropDialog } from "@/components/image";
 import { useMyHeaderImage, useMyProfile, useMyProfileImage } from "@/components/profile";
 import { CountableTextArea, CustomDialog, showFileChoosePopup, usePageLeaveConfirmation } from "@/components/utlis";
-import {
-  DEFAULT_HEADER_HEIGHT,
-  DEFAULT_HEADER_WIDTH,
-  DEFAULT_PROFILE_HEIGHT,
-  DEFAULT_PROFILE_WIDTH,
-  FetchResult,
-  FetchStatus,
-  HEADER_RATIO,
-  getPartArray,
-  indexToPartId,
-  indexToPartName,
-} from "@/libs/utils";
+import { DEFAULT_HEADER_HEIGHT, DEFAULT_HEADER_WIDTH, DEFAULT_PROFILE_HEIGHT, DEFAULT_PROFILE_WIDTH, FetchStatus, getPartArray, indexToPartId, indexToPartName, partInfo } from "@/libs/utils";
 import Head from "next/head";
-import { Dispatch, FormEvent, ForwardedRef, LegacyRef, MutableRefObject, RefObject, SetStateAction, forwardRef, use, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Dispatch, FormEvent, MutableRefObject, SetStateAction, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 export default function ProfileEditor() {
   const [profile, setProfile] = useMyProfile();
@@ -145,20 +134,23 @@ export default function ProfileEditor() {
 ProfileEditor.requireProfile = true;
 
 function PartSelector({ defaultValue = [], state }: { defaultValue?: Array<number>; state: [Array<number>, Dispatch<SetStateAction<Array<number>>>] }) {
-  const dramState = useState(false);
-  const baseState = useState(false);
-  const guiterState = useState(false);
-  const melodyState = useState(false);
+  const dramState = useState(partInfo.containsPart(defaultValue, partInfo.dram));
+  const baseState = useState(partInfo.containsPart(defaultValue, partInfo.base));
+  const guiterState = useState(partInfo.containsPart(defaultValue, partInfo.guiter));
+  const melodyState = useState(partInfo.containsPart(defaultValue, partInfo.melody));
   useEffect(() => {
     state[1](getPartArray(dramState[0], baseState[0], guiterState[0], melodyState[0]));
   }, [dramState[0], baseState[0], guiterState[0], melodyState[0]]);
 
+  const list = partInfo.createArray().map((value) => {
+    return (
+      <PartItem key={value} checked={state[0].includes(value)} partName={indexToPartName(value)} id={indexToPartId(value)} state={dramState} defaultChecked={defaultValue.includes(value)}></PartItem>
+    );
+  });
   return (
     <>
       <p className="text-lg">担当パート</p>
-      {[0, 1, 2, 3].map((value) => {
-        <PartItem checked={state[0].includes(value)} partName={indexToPartName(value)} id={indexToPartId(value)} state={dramState} defaultChecked={defaultValue.includes(value)}></PartItem>;
-      })}
+      {list}
     </>
   );
 }
@@ -228,23 +220,6 @@ function ImageSection({
     });
   }, [setProfileImageSelectorVisible]);
 
-  const profileImg = (() => {
-    if (profileImageURL) {
-      return (
-        <>
-          <img className="absolute top-[70%] left-5 h-[61%] aspect-[1/1] bg-gray-500 rounded-full" src={profileImageURL}></img>
-          <div className="absolute top-[70%] left-5 h-[61%] aspect-[1/1] bg-black bg-opacity-45 rounded-full flex align-middle justify-center cursor-pointer">
-            <div className="m-auto w-[40%] aspect-square relative bg-white rounded-full flex align-middle justify-center">
-              <img className="w-[50%]" src="/images/camera.svg"></img>
-            </div>
-          </div>
-        </>
-      );
-    } else {
-      return <div className="absolute top-[70%] left-5 h-[61%] aspect-[1/1] bg-gray-500 rounded-full cursor-pointer"></div>;
-    }
-  })();
-
   const headerBlobURL = useMemo(() => {
     if (headerBlobRef.current) {
       return URL.createObjectURL(headerBlobRef.current);
@@ -264,22 +239,6 @@ function ImageSection({
     });
   }, [setHeaderImageSelectorVisible]);
 
-  const headerImg = (() => {
-    if (headerImageURL) {
-      return (
-        <>
-          <img className="w-full aspect-[2.618/1] object-cover bg-gray-300" src={headerImageURL}></img>
-          <div className="absolute top-0 w-full aspect-[2.618/1] object-cover  bg-black bg-opacity-45 flex justify-center align-middle cursor-pointer">
-            <div className="m-auto h-[40%] aspect-square relative bg-white rounded-full flex align-middle justify-center">
-              <img className="w-[50%]" src="/images/camera.svg"></img>
-            </div>
-          </div>
-        </>
-      );
-    } else {
-      return <div className="w-full aspect-[2.618/1] object-cover bg-gray-300"></div>;
-    }
-  })();
   return (
     <>
       {isProfileImageSelectorVisible ? (
@@ -303,11 +262,49 @@ function ImageSection({
         ></ImageCropDialog>
       ) : null}
       <div className="relative w-full flex flex-col">
-        <div onClick={headerImageClickHandler}>{headerImg}</div>
-        <div onClick={profileImageClickHandler}>{profileImg}</div>
+        <div onClick={headerImageClickHandler}>
+          <HeaderImageDisplay headerImageURL={headerImageURL} />
+        </div>
+        <div onClick={profileImageClickHandler}>
+          <ProfileImageDisplay profileImageURL={profileImageURL} />
+        </div>
       </div>
     </>
   );
+}
+
+function HeaderImageDisplay({ headerImageURL }: { headerImageURL?: string | null }) {
+  if (headerImageURL) {
+    return (
+      <>
+        <img className="w-full aspect-[2.618/1] object-cover bg-gray-300" src={headerImageURL}></img>
+        <div className="absolute top-0 w-full aspect-[2.618/1] object-cover  bg-black bg-opacity-45 flex justify-center align-middle cursor-pointer">
+          <div className="m-auto h-[40%] aspect-square relative bg-white rounded-full flex align-middle justify-center">
+            <img className="w-[50%]" src="/images/camera.svg"></img>
+          </div>
+        </div>
+      </>
+    );
+  } else {
+    return <div className="w-full aspect-[2.618/1] object-cover bg-gray-300"></div>;
+  }
+}
+
+function ProfileImageDisplay({ profileImageURL }: { profileImageURL?: string | null }) {
+  if (profileImageURL) {
+    return (
+      <>
+        <img className="absolute top-[70%] left-5 h-[61%] aspect-[1/1] bg-gray-500 rounded-full" src={profileImageURL}></img>
+        <div className="absolute top-[70%] left-5 h-[61%] aspect-[1/1] bg-black bg-opacity-45 rounded-full flex align-middle justify-center cursor-pointer">
+          <div className="m-auto w-[40%] aspect-square relative bg-white rounded-full flex align-middle justify-center">
+            <img className="w-[50%]" src="/images/camera.svg"></img>
+          </div>
+        </div>
+      </>
+    );
+  } else {
+    return <div className="absolute top-[70%] left-5 h-[61%] aspect-[1/1] bg-gray-500 rounded-full cursor-pointer"></div>;
+  }
 }
 
 function isSame(part1?: Array<number>, part2?: Array<number>) {

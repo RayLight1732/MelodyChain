@@ -73,3 +73,40 @@ const partId = ["dram", "base", "guiter", "melody"];
 export function indexToPartId(index: number) {
   return partId[index]!;
 }
+
+class PartInfo {
+  private _dram = 0;
+  private _base = 1;
+  private _guiter = 2;
+  private _melody = 3;
+  private _count = 4;
+  get dram() {
+    return this._dram;
+  }
+
+  get base() {
+    return this._base;
+  }
+
+  get guiter() {
+    return this._guiter;
+  }
+
+  get melody() {
+    return this._melody;
+  }
+
+  get count() {
+    return this._count;
+  }
+
+  createArray() {
+    return [this.dram, this.base, this.guiter, this.melody];
+  }
+
+  containsPart(list: number[], part: number) {
+    return list.indexOf(part) !== -1;
+  }
+}
+
+export const partInfo = new PartInfo();
