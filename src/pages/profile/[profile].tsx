@@ -1,11 +1,13 @@
-import { JumpableMusicPreview } from "@/components/music";
+import { GoodHistory, InvolvedMusic, JumpableMusicPreview } from "@/components/music";
 import { useMyHeaderImage, useMyProfile, useMyProfileImage, useMyUid } from "@/components/profile";
+import { Panel } from "@/components/utlis";
+import { useGoodHistory } from "@/hooks/music";
 import { Music, getInvolvedMusic } from "@/libs/music";
 import { Profile, useHeaderImage, useProfile, useProfileImage } from "@/libs/profile";
 import { indexToPartName, numPartToBoolPart } from "@/libs/utils";
 import Head from "next/head";
 import { useRouter } from "next/router";
-import React, { useEffect, useState } from "react";
+import React, { ReactElement, useEffect, useMemo, useState } from "react";
 
 export default function ProfileView() {
   const router = useRouter();
@@ -87,48 +89,6 @@ function ProfileComponent({
   headerURL?: string | undefined | null;
   isMypage: boolean;
 }) {
-  /*
-  const [involvedMusicList, setInvolvedMusicList] = useState<{
-    musicList: Array<Music>;
-    last: DocumentSnapshot<DocumentData, DocumentData> | null;
-  }>({ musicList: [], last: null });*/
-  const [involvedMusicList, setInvolvedMusicList] = useState<Array<Music>>([]);
-
-  useEffect(() => {
-    let ignore = false;
-    if (profile) {
-      getInvolvedMusic(profile.getUid())
-        .then((result) => {
-          if (!ignore) {
-            setInvolvedMusicList(result.musicList);
-          }
-        })
-        .catch((e) => console.error(e));
-    }
-
-    const handler = (event: Event) => {
-      const target = event.target as HTMLElement;
-      if (target.scrollHeight <= target.scrollTop + target.clientHeight + 50) {
-        console.log("scroll end");
-      }
-    };
-    document.getElementById("container")?.addEventListener("scroll", handler);
-    return () => {
-      document.getElementById("container")?.removeEventListener("scroll", handler);
-      ignore = true;
-    };
-  }, [profile]);
-
-  const partElements = profile
-    ? numPartToBoolPart(profile.part).map((playPart, index) => {
-        if (playPart) {
-          return <li key={index}>{indexToPartName(index)}</li>;
-        } else {
-          return <></>;
-        }
-      })
-    : [];
-
   const router = useRouter();
 
   return (
@@ -140,36 +100,44 @@ function ProfileComponent({
       <div className="w-full aspect-[2.618/0.305] flex flex-wrap">
         <div className="w-20 h-10 flex-grow"></div>
         {isMypage && (
-          <p className=" my-auto mx-5 px-3 py-1 text font-bold break-words border rounded-full border-secondary cursor-pointer hover:bg-gray-100" onClick={() => router.push("/settings/profile")}>
+          <p className=" my-auto mx-5 px-3 py-1 text font-bold break-words border rounded-full border-accent cursor-pointer hover:bg-gray-100" onClick={() => router.push("/settings/profile")}>
             プロフィールを編集
           </p>
         )}
       </div>
       <div className="my-1 mx-5">
         <p className="text-3xl font-bold break-words">{profile?.name}</p>
-
-        <div className="mx-1">
-          <div className="my-4">
-            <p>好きなアーティスト</p>
-            <p className="ml-3 mt-1 break-words">{profile?.favorite}</p>
-            <p className="mx-1 mt-4">担当パート</p>
-            <ul className="ml-3 mt-1">{partElements}</ul>
-          </div>
-
-          <div className="my-6">
-            <p className="text-xl">過去の作品</p>
-            {involvedMusicList.map((music) => {
-              return <MusicPreviewWrapper music={music} key={music.id}></MusicPreviewWrapper>;
-            })}
-          </div>
+        <div className="mx-1 my-4">
+          <p>好きなアーティスト</p>
+          <p className="ml-3 mt-1 break-words">{profile?.favorite}</p>
+          <p className="mx-1 mt-4">担当パート</p>
+          <ul className="ml-3 mt-1">
+            <PartDisplay profile={profile} />
+          </ul>
+        </div>
+      </div>
+      <div className="my-6 mx-4">
+        <div className=" border-secondary border rounded-md">
+          <Panel
+            selectors={["過去の作品", "いいね"]}
+            nodes={[<div>{profile ? <InvolvedMusic uid={profile.getUid()}></InvolvedMusic> : null}</div>, <div>{profile ? <GoodHistory uid={profile.getUid()}></GoodHistory> : null}</div>]}
+          ></Panel>
         </div>
       </div>
     </>
   );
 }
 
-//TODO 意味がないのでuseSWRに頑張って変える
-const MusicPreviewWrapper = React.memo(function MusicPreviewWrapper({ music }: { music: Music }) {
-  const router = useRouter();
-  return <JumpableMusicPreview music={music}></JumpableMusicPreview>;
-});
+function PartDisplay({ profile }: { profile?: Profile | null }) {
+  if (profile) {
+    return numPartToBoolPart(profile.part).map((playPart, index) => {
+      if (playPart) {
+        return <li key={index}>{indexToPartName(index)}</li>;
+      } else {
+        return <></>;
+      }
+    });
+  } else {
+    return <></>;
+  }
+}

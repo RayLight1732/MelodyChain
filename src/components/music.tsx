@@ -1,11 +1,17 @@
 import { Music, getAuthorProfileURLs } from "@/libs/music";
-import { MouseEventHandler, useEffect, useState } from "react";
+import { MouseEventHandler, useEffect, useMemo, useState } from "react";
 
-import { PlayButton, SpinningLoader } from "./utlis";
+import { InfiniteScrollViewer, PlayButton, SpinningLoader } from "./utlis";
 import { useRouter } from "next/router";
-import { useThumbnailURL, useTrackURLs } from "@/hooks/music";
+import { useGoodCounter, useGoodHistory, useInvolvedMusic, useMusicDetail, useThumbnailURL, useTrackURLs, useUploadedMusic, useViewCounter } from "@/hooks/music";
 import { indexToPartName } from "@/libs/utils";
 import { useAudioManager } from "@/hooks/audioManager";
+
+export function JumpableMusicPreviewById({ musicId }: { musicId: string }) {
+  const { data, isLoading } = useMusicDetail(musicId);
+
+  return <JumpableMusicPreview music={data}></JumpableMusicPreview>;
+}
 
 export function JumpableMusicPreview({ music }: { music: Music | null | undefined }) {
   const router = useRouter();
@@ -41,7 +47,39 @@ export function MusicPreview({ music }: { music: Music | null | undefined }) {
   return (
     <div className="pb-4">
       <ImageComponent></ImageComponent>
-      <p className="text-center pt-2">{music?.name}</p>
+      <p className="text-center pt-3 font-bold text-2xl ">{music?.name}</p>
+    </div>
+  );
+}
+
+export function MusicInfo({ music, className = "", inclementViewCount }: { music: Music; className?: string; inclementViewCount: boolean }) {
+  const fmt = useMemo(() => {
+    return new Intl.NumberFormat(window.navigator.language, { notation: "compact" });
+  }, []);
+  const { isPressed, count: goodCount, setPressed } = useGoodCounter(music);
+  const [isMouseDown, setMouseDown] = useState(false);
+  const viewCount = useViewCounter(music, inclementViewCount);
+  return (
+    <div className={"w-full flex justify-between px-4 " + className}>
+      <p className="bg-secondary rounded-full px-4 py-2">{fmt.format(viewCount)}回試聴</p>
+      <div
+        onClick={() => {
+          setPressed(!isPressed);
+        }}
+        onMouseDown={() => {
+          setMouseDown(true);
+        }}
+        onMouseUp={() => {
+          setMouseDown(false);
+        }}
+        onMouseLeave={() => {
+          setMouseDown(false);
+        }}
+        className="bg-secondary rounded-full px-4 py-2 flex cursor-pointer hover:bg-hsecondary"
+      >
+        <div className={"w-6 h-6 " + (isPressed || isMouseDown ? "bg-[url('/images/heart_red.svg')] animate-heart-animation" : "bg-[url('/images/heart.svg')]")}></div>
+        <p className="select-none">{fmt.format(goodCount)}</p>
+      </div>
     </div>
   );
 }
@@ -133,5 +171,41 @@ export function TrackPlayer({
         <SpinningLoader className="rounded-full w-[15%] aspect-square" />
       )}
     </li>
+  );
+}
+
+export function GoodHistory({ uid }: { uid: string }) {
+  const { history, loadNext } = useGoodHistory(uid);
+  return (
+    <InfiniteScrollViewer
+      loadNext={loadNext}
+      loaded={history.map((it) => (
+        <JumpableMusicPreviewById musicId={it} key={it}></JumpableMusicPreviewById>
+      ))}
+    ></InfiniteScrollViewer>
+  );
+}
+
+export function InvolvedMusic({ uid }: { uid: string }) {
+  const { history, loadNext } = useInvolvedMusic(uid);
+  return (
+    <InfiniteScrollViewer
+      loadNext={loadNext}
+      loaded={history.map((it) => (
+        <JumpableMusicPreview music={it} key={it.id}></JumpableMusicPreview>
+      ))}
+    ></InfiniteScrollViewer>
+  );
+}
+
+export function UploadedMusic() {
+  const { history, loadNext } = useUploadedMusic();
+  return (
+    <InfiniteScrollViewer
+      loadNext={loadNext}
+      loaded={history.map((it) => (
+        <JumpableMusicPreview music={it} key={it.id}></JumpableMusicPreview>
+      ))}
+    ></InfiniteScrollViewer>
   );
 }

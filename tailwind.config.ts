@@ -1,3 +1,4 @@
+import { transform } from "next/dist/build/swc";
 import type { Config } from "tailwindcss";
 import plugin from "tailwindcss/plugin";
 import { PluginAPI } from "tailwindcss/types/config";
@@ -7,11 +8,13 @@ const config: Config = {
   theme: {
     backgroundColor: (theme: any) => ({
       ...theme("colors"),
-      secondary: "#CCC",
     }),
     extend: {
       colors: {
-        secondary: "#777777",
+        primary: "#ffffff",
+        accent: "#777777",
+        secondary: "#dddddd",
+        hsecondary: "#bbbbbb",
         warn: "#f4212f",
       },
       keyframes: {
@@ -32,9 +35,20 @@ const config: Config = {
             transform: "translateY(0px)",
           },
         },
+        "heart-animation": {
+          "20%": {
+            transform: "scale(0.4)",
+          },
+
+          "100%": {
+            transform: "scale(1)",
+            animationTimingFunction: "ease-in",
+          },
+        },
       },
       animation: {
         "wave-animation": "wave-animation 2s infinite ease-in-out",
+        "heart-animation": "heart-animation 0.5s",
       },
     },
   },

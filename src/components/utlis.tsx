@@ -165,7 +165,7 @@ export const CountableTextArea = forwardRef<HTMLDivElement, CountableTextAreaPro
         className={` cursor-text leading-tight p-2 rounded outline outline-1 focus-within:outline-2 ${
           showWarn
             ? "outline-[#ff9999] hover:outline-warn hover:focus-within:outline-warn focus-within:outline-warn "
-            : "outline-secondary hover:outline-gray-600 hover:focus-within:outline-blue-400 focus-within:outline-blue-400 "
+            : "outline-accent hover:outline-gray-600 hover:focus-within:outline-blue-400 focus-within:outline-blue-400 "
         } `}
         onClick={() => inputRef.current?.focus()}
       >
@@ -195,3 +195,91 @@ export const CountableTextArea = forwardRef<HTMLDivElement, CountableTextAreaPro
     </div>
   );
 });
+
+//参考
+//https://www.ey-office.com/blog_archive/2023/06/14/modern-infinite-scroll-seems-to-use-intersectionobserve/
+
+/**
+ * 無限スクロール用のプロパティ
+ */
+interface InfiniteScrollViewerProps {
+  /**
+   * すでにロードされた要素
+   */
+  loaded: ReactElement[];
+  /**
+   * 交差監視用のルート要素
+   */
+  root?: HTMLElement;
+  /**
+   * 次をロードする
+   * @returns その次があるかどうか
+   */
+  loadNext: () => Promise<boolean>;
+}
+
+/**
+ * 無限スクロール用のコンポーネント
+ * @param {InfiniteScrollViewerProps} param0
+ * @returns
+ */
+export function InfiniteScrollViewer({ loaded, root, loadNext }: InfiniteScrollViewerProps) {
+  const observerTarget = useRef<HTMLDivElement | null>(null);
+  const isLoading = useRef(false);
+  const hasNext = useRef(true);
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting && !isLoading.current && hasNext.current) {
+          isLoading.current = true;
+
+          loadNext().then((result) => {
+            isLoading.current = false;
+            hasNext.current = result;
+            console.log("end loading");
+          });
+        }
+      },
+      {
+        root: root,
+        threshold: 1.0,
+      }
+    );
+    if (observerTarget.current) {
+      observer.observe(observerTarget.current);
+    }
+
+    return () => {
+      if (observerTarget.current) {
+        observer.unobserve(observerTarget.current);
+      }
+    };
+  }, []);
+
+  return (
+    <div>
+      {loaded}
+      <div ref={observerTarget}></div>
+    </div>
+  );
+}
+
+export function Panel({ selectors, nodes, initialState = 0 }: { selectors: string[]; nodes: ReactElement[]; initialState?: number }) {
+  const [panelState, setPanelState] = useState(initialState);
+  return (
+    <>
+      <div className="grid justify-between px-4 border-b border-secondary" style={{ gridTemplateColumns: `repeat(${selectors.length},minmax(0,1fr))` }}>
+        {selectors.map((selector, index) => (
+          <p className={"py-1 text-xl text-center cursor-pointer " + (index == panelState ? "border-b-2 border-black" : "")} key={selector} onClick={() => setPanelState(index)}>
+            {selector}
+          </p>
+        ))}
+      </div>
+      {nodes.map((node, index) => (
+        <div className={panelState == index ? "" : "hidden"} key={index}>
+          {node}
+        </div>
+      ))}
+    </>
+  );
+}

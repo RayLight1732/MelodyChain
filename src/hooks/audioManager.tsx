@@ -4,7 +4,7 @@ import { useAudioContext } from "./context";
 
 //part:0 ドラム 1ベース 2ギター 3メロディー 4全部
 class AudioManager {
-  audioStateList: Array<AudioState>;
+  private audioStateList: Array<AudioState>;
   private audioCtx: AudioContext;
   private offset = 0;
   constructor(audioStateList: Array<AudioState>, audioCtx: AudioContext) {

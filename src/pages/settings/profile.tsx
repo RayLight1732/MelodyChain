@@ -46,11 +46,11 @@ export default function ProfileEditor() {
     return (
       <div className="flex flex-col bg-white max-w-80 w-[80vw] p-8 rounded-xl">
         <p className="mx-auto text-warn text-lg font-bold">編集内容を破棄しますか</p>
-        <p className="mx-auto mt-2 text-secondary ">この操作は取り消しできません。編集内容は失われます。</p>
+        <p className="mx-auto mt-2 text-accent ">この操作は取り消しできません。編集内容は失われます。</p>
         <button className="w-40 mt-8 border-2 border-warn bg-warn text-white rounded-full px-2 mx-auto text-xl focus:outline-none" onClick={onConfirm}>
           破棄
         </button>
-        <button className="w-40 mt-8 border-2 border-secondary rounded-full px-2 mx-auto text-xl focus:outline-none" onClick={oncancel}>
+        <button className="w-40 mt-8 border-2 border-accent rounded-full px-2 mx-auto text-xl focus:outline-none" onClick={oncancel}>
           キャンセル
         </button>
       </div>
@@ -96,8 +96,8 @@ export default function ProfileEditor() {
       <CustomDialog isOpen={isErrorDialogShown} onClose={() => showErrorDialog(false)}>
         <div className="flex flex-col bg-white max-w-80 w-[80vw] p-8 rounded-xl">
           <p className="text-warn text-lg font-bold">エラー:</p>
-          <p className="mt-2 text-secondary text-lg">プロフィールの更新に失敗しました。</p>
-          <button className="w-40 mt-8 border-2 border-secondary rounded-full px-2 mx-auto text-xl focus:outline-none" onClick={() => showErrorDialog(false)}>
+          <p className="mt-2 text-accent text-lg">プロフィールの更新に失敗しました。</p>
+          <button className="w-40 mt-8 border-2 border-accent rounded-full px-2 mx-auto text-xl focus:outline-none" onClick={() => showErrorDialog(false)}>
             閉じる
           </button>
         </div>
@@ -105,11 +105,11 @@ export default function ProfileEditor() {
       <CustomDialog isOpen={isWarnDialogShown} onClose={() => showWarnDialog(false)}>
         <div className="flex flex-col bg-white max-w-80 w-[80vw] p-8 rounded-xl">
           <p className="mx-auto text-warn text-lg font-bold">編集内容を破棄しますか</p>
-          <p className="mx-auto mt-2 text-secondary ">この操作は取り消しできません。編集内容は失われます。</p>
+          <p className="mx-auto mt-2 text-accent ">この操作は取り消しできません。編集内容は失われます。</p>
           <button className="w-40 mt-8 border-2 border-warn bg-warn text-white rounded-full px-2 mx-auto text-xl focus:outline-none" onClick={() => showWarnDialog(false)}>
             破棄
           </button>
-          <button className="w-40 mt-8 border-2 border-secondary rounded-full px-2 mx-auto text-xl focus:outline-none" onClick={() => showWarnDialog(false)}>
+          <button className="w-40 mt-8 border-2 border-accent rounded-full px-2 mx-auto text-xl focus:outline-none" onClick={() => showWarnDialog(false)}>
             キャンセル
           </button>
         </div>
@@ -134,7 +134,7 @@ export default function ProfileEditor() {
             <PartSelector defaultValue={profile.getContent()?.part} state={partValueState}></PartSelector>
           </div>
 
-          <button type="submit" className=" bg-black text-white w-fit mx-auto py-2 px-4 rounded-full text-xl disabled:bg-secondary" disabled={nameValueState[0].length == 0}>
+          <button type="submit" className="bg-black text-white w-fit mx-auto py-2 px-4 rounded-full text-xl disabled:bg-secondary" disabled={nameValueState[0].length == 0}>
             更新
           </button>
         </div>

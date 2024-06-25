@@ -1,4 +1,4 @@
-import { MusicPlayer, MusicPreview } from "@/components/music";
+import { MusicInfo, MusicPlayer, MusicPreview } from "@/components/music";
 import { Music, getMusicDetail } from "@/libs/music";
 import { useRouter } from "next/router";
 import React, { useEffect, useState } from "react";
@@ -28,6 +28,7 @@ export default function MusicView() {
     return (
       <>
         <MusicPreview music={music} />
+        <MusicInfo music={music} inclementViewCount={true}></MusicInfo>
         <MusicPlayer music={music} />
       </>
     );

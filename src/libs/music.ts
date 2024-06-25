@@ -1,7 +1,27 @@
-import { DocumentSnapshot, collection, doc, getDoc, getDocs, orderBy, query, where, limit as funcLimit, startAfter as funcStartAfter, QuerySnapshot, setDoc, DocumentData } from "firebase/firestore";
-import { auth, db, storage } from "./initialize";
+import { DocumentSnapshot, collection, doc, getDoc, getDocs, where, limit as funcLimit, startAfter as funcStartAfter, QuerySnapshot, setDoc, DocumentData, query, orderBy } from "firebase/firestore";
+import { auth, db, rdb, storage } from "./initialize";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
-import { getProfileImageUrl, getProfileImageUrlById } from "./profile";
+import {
+  DataSnapshot,
+  Query,
+  Unsubscribe,
+  endBefore,
+  equalTo,
+  get,
+  increment,
+  limitToFirst,
+  limitToLast,
+  off,
+  onValue,
+  orderByChild,
+  query as rdbQuery,
+  ref as rdbRef,
+  remove,
+  serverTimestamp,
+  set,
+  update,
+} from "firebase/database";
+import { getProfileImageUrlById } from "./profile";
 
 export class Music {
   id: string;
@@ -60,8 +80,8 @@ function querySnapshotToMusicList(snapshot: QuerySnapshot): {
  */
 export async function getInvolvedMusic(
   uid: string,
-  limit = 10,
-  startAfter: any = null
+  startAfter: any = null,
+  limit = 2
 ): Promise<{
   musicList: Array<Music>;
   last: DocumentSnapshot<DocumentData, DocumentData> | null;
@@ -69,27 +89,25 @@ export async function getInvolvedMusic(
   //即時関数
   const q = (function () {
     if (startAfter) {
-      return query(collection(db, "music"), where("authorIDs", "array-contains", uid), orderBy("date", "desc"), funcLimit(limit), funcStartAfter(startAfter));
+      console.log("start after", Music.getInstance(startAfter));
+      return query(collection(db, "music"), where("authorIDs", "array-contains", uid), orderBy("date", "desc"), funcStartAfter(startAfter), funcLimit(limit));
     } else {
       return query(collection(db, "music"), where("authorIDs", "array-contains", uid), orderBy("date", "desc"), funcLimit(limit));
     }
   })();
 
   const querySnapshot = await getDocs(q);
-  querySnapshot.forEach((mu) => {
-    console.log(mu.data()?.name);
-  });
   return querySnapshotToMusicList(querySnapshot);
 }
 
 /**
  * 全ての楽曲の中からいくつかを取得する
+ * @param {any} [startAfter] 指定したドキュメントの後から取得を開始する
  * @param {number} [limit=10] 取得する数
- * @param {} [startAfter] 指定したドキュメントの後から取得を開始する
  * @returns スナップショット @see {@link https://firebase.google.com/docs/firestore/query-data/get-data?hl=ja}
  * for(const value of returnValue)で楽曲が取れる
  */
-export async function getMusic(limit = 10, startAfter: any = null) {
+export async function getUploadedMusic(startAfter: any = null, limit = 10) {
   //即時関数
   const q = (function () {
     if (startAfter) {
@@ -172,7 +190,145 @@ export async function getAuthorProfileURLs(music: Music) {
   return result;
 }
 
+function createMusicGoodFlagRef(music: Music, uid: string): string {
+  return `music/${music.id}/${uid}/good/flag`;
+}
+
+function createMusicGoodCounterRef(music: Music): string {
+  return `music/${music.id}/good_counter`;
+}
+
+function createMusicViewFlagRef(music: Music, uid: string): string {
+  return `music/${music.id}/${uid}/view/flag`;
+}
+
+function createMusicViewCounterRef(music: Music): string {
+  return `music/${music.id}/view_counter`;
+}
+
+function createUserSideGoodTimestampRef(music: Music, uid: string): string {
+  return `${createUserSideGoodRef(uid)}/${music.id}/timestamp`;
+}
+
+function createUserSideGoodRef(uid: string): string {
+  return `user/${uid}/good`;
+}
+
+export function subscribeGoodCounter(music: Music, onChange: (value: number) => void): () => void {
+  const musicGoodCounterRef = rdbRef(rdb, createMusicGoodCounterRef(music));
+  return onValue(
+    musicGoodCounterRef,
+    (snapshot) => {
+      onChange(snapshot.val() ?? 0);
+    },
+    () => {
+      console.log("error in good counter");
+    }
+  );
+}
+
+export function subscribeGoodCounterPressed(music: Music, uid: string, onChange: (value: boolean) => void): Unsubscribe {
+  const flagRef = rdbRef(rdb, createMusicGoodFlagRef(music, uid));
+  const callback = (snapshot: DataSnapshot) => {
+    onChange(snapshot.val() ?? false);
+  };
+  return onValue(flagRef, callback, () => {
+    console.log("error in good flag");
+  });
+}
+
+interface Updates {
+  [key: string]: any;
+}
+
+export function setGoodPressed(music: Music, uid: string, pressed: boolean) {
+  const flagRef = createMusicGoodFlagRef(music, uid);
+  const musicGoodCounterRef = createMusicGoodCounterRef(music);
+  const userSideGoodTimestampRef = createUserSideGoodTimestampRef(music, uid);
+  const updates: Updates = {};
+  if (pressed) {
+    updates[flagRef] = true;
+    updates[musicGoodCounterRef] = increment(1);
+    updates[userSideGoodTimestampRef] = serverTimestamp();
+  } else {
+    updates[flagRef] = null;
+    updates[musicGoodCounterRef] = increment(-1);
+    updates[userSideGoodTimestampRef] = null;
+    console.log(userSideGoodTimestampRef);
+  }
+
+  update(rdbRef(rdb), updates);
+}
+
+export function subscribeViewedMusic(music: Music, uid: string, onChange: (viewed: boolean) => void): Unsubscribe {
+  const flagRef = rdbRef(rdb, createMusicViewFlagRef(music, uid));
+  const callback = (snapshot: DataSnapshot) => {
+    onChange(snapshot.val() ?? false);
+  };
+  return onValue(flagRef, callback, () => {
+    console.log("error in viewed music");
+  });
+}
+
+export function subscribeViewCounter(music: Music, onChange: (count: number) => void): Unsubscribe {
+  const counterRef = rdbRef(rdb, createMusicViewCounterRef(music));
+  return onValue(
+    counterRef,
+    (snapshot) => {
+      onChange(snapshot.val() ?? 0);
+    },
+    () => {
+      console.log("error in view counter");
+    }
+  );
+}
+
+export function incrementViewCount(music: Music, uid: string) {
+  const flagRef = createMusicViewFlagRef(music, uid);
+  const musicViewCounterRef = createMusicViewCounterRef(music);
+  const updates: Updates = {};
+  updates[flagRef] = true;
+  updates[musicViewCounterRef] = increment(1);
+
+  update(rdbRef(rdb), updates);
+}
+
+export class GoodHistory {
+  private _uid: string;
+  private _date: Date;
+  constructor(uid: string, date: Date) {
+    this._uid = uid;
+    this._date = date;
+  }
+
+  get uid() {
+    return this._uid;
+  }
+
+  get date() {
+    return this._date;
+  }
+}
+
 /**
- * 割り当てられた楽曲を投稿済みかどうか
+ * いいねの履歴を取得する
+ * @param {string} uid 対象のUUID
+ * @param {Date} [before] この日付よりも前のものを取得する
+ * @param {number} [limit=10] 読み込む履歴の数
+ * @returns {Promise<GoodHistory[]>}
  */
-export async function uploaded() {}
+export async function getGoodHistory(uid: string, before?: Date, limit: number = 4): Promise<GoodHistory[]> {
+  const musicRef = rdbRef(rdb, createUserSideGoodRef(uid));
+  var q: Query;
+  if (before) {
+    q = rdbQuery(musicRef, orderByChild("timestamp"), endBefore(before.getTime()), limitToLast(limit));
+  } else {
+    q = rdbQuery(musicRef, orderByChild("timestamp"), limitToLast(limit));
+  }
+  const snapshot = await get(q);
+  const result: GoodHistory[] = [];
+  snapshot.forEach((child) => {
+    result.push(new GoodHistory(child.key, new Date(child.child("timestamp").val())));
+  });
+  return result.reverse();
+}
