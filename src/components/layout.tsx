@@ -23,20 +23,20 @@ export function Header() {
 export function Footer() {
   const profileURL: string = useMyProfileImage()[0].getContent() ?? "/images/tmp-profile.png";
   return (
-    <footer className="flex justify-between items-center px-5 py-2.5 border-t-2 divide-solid border-accent bg-white z-40">
+    <footer className="grid grid-cols-3 px-5 py-2.5 border-t-2 divide-solid border-accent bg-white z-40">
       <div>
-        <Link href="/top">
-          <img src="/images/home.svg" alt="top" />
+        <Link href="/music" className="text-center flex justify-center h-full">
+          <img src="/images/home.svg" className="w-[35px] h-[35px] m-auto block" alt="top" />
         </Link>
       </div>
       <div>
         <Link href="/music">
-          <img src="/images/headphones.png" alt="detail" />
+          <img src="/images/headphones.png" className="w-[45px] h-[45px] m-auto" alt="detail" />
         </Link>
       </div>
       <div>
         <Link href={`/profile/${auth.currentUser?.uid}`}>
-          <img src={profileURL} className="w-[65px] h-[65px] rounded-full" alt="profile" />
+          <img src={profileURL} className="w-[45px] h-[45px] rounded-full m-auto" alt="profile" />
         </Link>
       </div>
     </footer>
