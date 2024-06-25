@@ -25,7 +25,7 @@ export function Footer() {
   return (
     <footer className="grid grid-cols-3 px-5 py-2.5 border-t-2 divide-solid border-accent bg-white z-40">
       <div>
-        <Link href="/music" className="text-center flex justify-center h-full">
+        <Link href="/top" className="text-center flex justify-center h-full">
           <img src="/images/home.svg" className="w-[35px] h-[35px] m-auto block" alt="top" />
         </Link>
       </div>
