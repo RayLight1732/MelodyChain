@@ -3,6 +3,7 @@ import { useMyHeaderImage, useMyProfile, useMyProfileImage } from "@/components/
 import { CountableTextArea, CustomDialog, showFileChoosePopup, usePageLeaveConfirmation } from "@/components/utlis";
 import { DEFAULT_HEADER_HEIGHT, DEFAULT_HEADER_WIDTH, DEFAULT_PROFILE_HEIGHT, DEFAULT_PROFILE_WIDTH, FetchStatus, getPartArray, indexToPartId, indexToPartName, partInfo } from "@/libs/utils";
 import Head from "next/head";
+import { useRouter } from "next/router";
 import { Dispatch, FormEvent, MutableRefObject, SetStateAction, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 export default function ProfileEditor() {
@@ -16,7 +17,7 @@ export default function ProfileEditor() {
 
   const nameValueState = useState("");
   const favoriteValueState = useState("");
-  const partValueState = useState<Array<number>>([]);
+  const [allPartState, setAllPartState] = useState<Array<number>>([]);
 
   const [isErrorDialogShown, showErrorDialog] = useState(false); //エラーが発生した時用
   const [isWarnDialogShown, showWarnDialog] = useState(false); //編集中のページ離脱警告
@@ -27,9 +28,9 @@ export default function ProfileEditor() {
       !!headerBlobRef.current ||
       profile.getContent()?.name != nameValueState[0] ||
       profile.getContent()?.favorite != favoriteValueState[0] ||
-      !isSame(profile.getContent()?.part, partValueState[0])
+      !isSame(profile.getContent()?.part, allPartState)
     );
-  }, [profile, profileBlobRef.current, headerBlobRef.current, nameValueState[0], favoriteValueState[0], partValueState[0]]);
+  }, [profile, profileBlobRef.current, headerBlobRef.current, nameValueState[0], favoriteValueState[0], allPartState]);
 
   const dialogFactory = useCallback((onConfirm: () => void, oncancel: () => void) => {
     return (
@@ -45,7 +46,7 @@ export default function ProfileEditor() {
       </div>
     );
   }, []);
-
+  const router = useRouter();
   const confirmDialog = usePageLeaveConfirmation(showDialog, dialogFactory);
 
   const submitHandler = async (e: FormEvent<HTMLFormElement>) => {
@@ -55,7 +56,7 @@ export default function ProfileEditor() {
       nameComponentRef.current?.scrollIntoView();
     } else {
       const promiseList: Array<Promise<any>> = [];
-      promiseList.push(setProfile(nameValueState[0], favoriteValueState[0], partValueState[0]));
+      promiseList.push(setProfile(nameValueState[0], favoriteValueState[0], allPartState));
       if (headerBlobRef.current) {
         promiseList.push(setHeaderImage(headerBlobRef.current));
       }
@@ -70,6 +71,7 @@ export default function ProfileEditor() {
             break;
           }
         }
+        router.push(`/profile/${profile.getContent()?.getUid()}`);
       } catch (e) {
         console.error(e);
         showErrorDialog(true);
@@ -120,7 +122,7 @@ export default function ProfileEditor() {
           ></CountableTextArea>
           <CountableTextArea defaultValue={profile.getContent()?.favorite} state={favoriteValueState} id="favorite" placeholder="好きなアーティスト" maxLength={50} rows={2}></CountableTextArea>
           <div className="my-2">
-            <PartSelector defaultValue={profile.getContent()?.part} state={partValueState}></PartSelector>
+            <PartSelector defaultValue={profile.getContent()?.part} allPartState={allPartState} setAllPartState={setAllPartState}></PartSelector>
           </div>
 
           <button type="submit" className="bg-black text-white w-fit mx-auto py-2 px-4 rounded-full text-xl disabled:bg-secondary" disabled={nameValueState[0].length == 0}>
@@ -133,19 +135,14 @@ export default function ProfileEditor() {
 }
 ProfileEditor.requireProfile = true;
 
-function PartSelector({ defaultValue = [], state }: { defaultValue?: Array<number>; state: [Array<number>, Dispatch<SetStateAction<Array<number>>>] }) {
-  const dramState = useState(partInfo.containsPart(defaultValue, partInfo.dram));
-  const baseState = useState(partInfo.containsPart(defaultValue, partInfo.base));
-  const guiterState = useState(partInfo.containsPart(defaultValue, partInfo.guiter));
-  const melodyState = useState(partInfo.containsPart(defaultValue, partInfo.melody));
+function PartSelector({ defaultValue = [], allPartState, setAllPartState }: { defaultValue?: Array<number>; allPartState: Array<number>; setAllPartState: Dispatch<SetStateAction<Array<number>>> }) {
   useEffect(() => {
-    state[1](getPartArray(dramState[0], baseState[0], guiterState[0], melodyState[0]));
-  }, [dramState[0], baseState[0], guiterState[0], melodyState[0]]);
-
+    if (defaultValue) {
+      setAllPartState(defaultValue);
+    }
+  }, [defaultValue]);
   const list = partInfo.createArray().map((value) => {
-    return (
-      <PartItem key={value} checked={state[0].includes(value)} partName={indexToPartName(value)} id={indexToPartId(value)} state={dramState} defaultChecked={defaultValue.includes(value)}></PartItem>
-    );
+    return <PartItem key={value} partName={indexToPartName(value)} id={value} allPartState={allPartState} setAllPartState={setAllPartState}></PartItem>;
   });
   return (
     <>
@@ -155,22 +152,35 @@ function PartSelector({ defaultValue = [], state }: { defaultValue?: Array<numbe
   );
 }
 
-function PartItem({ partName, id, defaultChecked = false, state }: { defaultChecked?: boolean; partName: string; id: string; checked?: boolean; state: [boolean, Dispatch<SetStateAction<boolean>>] }) {
-  const [checked, setChecked] = state;
-  useEffect(() => {
-    setChecked(defaultChecked);
-  }, [defaultChecked]);
+function PartItem({
+  partName,
+  id,
+  allPartState,
+  setAllPartState,
+}: {
+  defaultChecked?: boolean;
+  partName: string;
+  id: number;
+  allPartState: number[];
+  setAllPartState: Dispatch<SetStateAction<number[]>>;
+}) {
   return (
     <div className="flex items-center">
-      <label className="relative flex items-center p-2 rounded-full cursor-pointer" htmlFor={id}>
+      <label className="relative flex items-center p-2 rounded-full cursor-pointer" htmlFor={String(id)}>
         <input
           type="checkbox"
           className="before:content[''] peer relative h-5 w-5 cursor-pointer appearance-none rounded-md border border-blue-gray-200 transition-all before:absolute before:top-2/4 before:left-2/4 before:block before:h-8 before:w-8 before:-translate-y-2/4 before:-translate-x-2/4 before:rounded-full before:bg-blue-gray-500 before:opacity-0 before:transition-opacity checked:border-gray-900 checked:bg-gray-900 before:bg-gray-900 hover:before:opacity-10"
-          id={id}
-          name={id}
-          checked={checked}
+          id={String(id)}
+          name={String(id)}
+          checked={allPartState.indexOf(id) !== -1}
           onChange={(e) => {
-            setChecked(e.target.checked);
+            if (e.target.checked) {
+              if (allPartState.indexOf(id) === -1) {
+                setAllPartState(allPartState.concat(id));
+              }
+            } else {
+              setAllPartState(allPartState.filter((it) => it !== id));
+            }
           }}
         />
         <span className="absolute text-white transition-opacity opacity-0 pointer-events-none top-2/4 left-2/4 -translate-y-2/4 -translate-x-2/4 peer-checked:opacity-100">
@@ -179,7 +189,7 @@ function PartItem({ partName, id, defaultChecked = false, state }: { defaultChec
           </svg>
         </span>
       </label>
-      <label className="mt-px font-light text-gray-700 cursor-pointer select-none" htmlFor={id}>
+      <label className="mt-px font-light text-gray-700 cursor-pointer select-none" htmlFor={String(id)}>
         {partName}
       </label>
     </div>
