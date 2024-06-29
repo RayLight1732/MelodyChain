@@ -1,5 +1,5 @@
 import { useRouter } from "next/router";
-import { Dispatch, ForwardedRef, MouseEventHandler, ReactElement, SetStateAction, forwardRef, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Dispatch, ForwardedRef, MouseEventHandler, MutableRefObject, ReactElement, SetStateAction, forwardRef, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 export function CustomDialog({ children, isOpen, onClose }: { isOpen: boolean; children?: ReactElement; onClose: () => void }) {
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -264,13 +264,27 @@ export function InfiniteScrollViewer({ loaded, root, loadNext }: InfiniteScrollV
   );
 }
 
-export function Panel({ selectors, nodes, initialState = 0 }: { selectors: string[]; nodes: ReactElement[]; initialState?: number }) {
+export function Panel({ selectors, nodes, initialState = 0, queryName }: { selectors: string[]; nodes: ReactElement[]; initialState?: number; queryName?: string }) {
   const [panelState, setPanelState] = useState(initialState);
+  const router = useRouter();
+  useEffect(() => {
+    setPanelState(initialState);
+  }, [initialState]);
   return (
     <>
       <div className="grid justify-between px-4 border-b border-secondary" style={{ gridTemplateColumns: `repeat(${selectors.length},minmax(0,1fr))` }}>
         {selectors.map((selector, index) => (
-          <p className={"py-1 text-xl text-center cursor-pointer " + (index == panelState ? "border-b-2 border-black" : "")} key={selector} onClick={() => setPanelState(index)}>
+          <p
+            className={"py-1 text-xl text-center cursor-pointer " + (index == panelState ? "border-b-2 border-black" : "")}
+            key={selector}
+            onClick={() => {
+              if (queryName) {
+                const newQuery = { ...router.query, [queryName]: selector };
+                router.push({ pathname: router.pathname, query: newQuery });
+              }
+              setPanelState(index);
+            }}
+          >
             {selector}
           </p>
         ))}

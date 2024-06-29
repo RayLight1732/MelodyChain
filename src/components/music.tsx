@@ -1,11 +1,12 @@
 import { Music, getAuthorProfileURLs } from "@/libs/music";
-import { MouseEventHandler, useEffect, useMemo, useState } from "react";
+import { MouseEventHandler, useEffect, useMemo, useRef, useState } from "react";
 
 import { InfiniteScrollViewer, PlayButton, SpinningLoader } from "./utlis";
 import { useRouter } from "next/router";
 import { useGoodCounter, useGoodHistory, useInvolvedMusic, useMusicDetail, useThumbnailURL, useTrackURLs, useUploadedMusic, useViewCounter } from "@/hooks/music";
 import { indexToPartName } from "@/libs/utils";
 import { useAudioManager } from "@/hooks/audioManager";
+import { useScrollHistory } from "@/hooks/scroll";
 
 export function JumpableMusicPreviewById({ musicId }: { musicId: string }) {
   const { data, isLoading } = useMusicDetail(musicId);
@@ -174,8 +175,21 @@ export function TrackPlayer({
   );
 }
 
-export function GoodHistory({ uid }: { uid: string }) {
+/**
+ *
+ * uid 対象のUUID
+ * loadFirst マウント時に読み込むかどうか
+ * @returns
+ */
+export function GoodHistory({ uid, loadFirst = false }: { uid: string; loadFirst?: boolean }) {
   const { history, loadNext } = useGoodHistory(uid);
+  useEffect(() => {
+    if (loadFirst) {
+      loadNext();
+    }
+  }, []);
+  const router = useRouter();
+  useScrollHistory("good/" + router.pathname);
   return (
     <InfiniteScrollViewer
       loadNext={loadNext}
@@ -186,8 +200,15 @@ export function GoodHistory({ uid }: { uid: string }) {
   );
 }
 
-export function InvolvedMusic({ uid }: { uid: string }) {
+export function InvolvedMusic({ uid, loadFirst = false }: { uid: string; loadFirst?: boolean }) {
   const { history, loadNext } = useInvolvedMusic(uid);
+  const router = useRouter();
+  useEffect(() => {
+    if (loadFirst) {
+      loadNext();
+    }
+  }, []);
+  useScrollHistory("involved/" + router.pathname);
   return (
     <InfiniteScrollViewer
       loadNext={loadNext}
@@ -200,6 +221,8 @@ export function InvolvedMusic({ uid }: { uid: string }) {
 
 export function UploadedMusic() {
   const { history, loadNext } = useUploadedMusic();
+  const router = useRouter();
+  useScrollHistory(router.pathname);
   return (
     <InfiniteScrollViewer
       loadNext={loadNext}

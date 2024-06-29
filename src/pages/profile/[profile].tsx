@@ -9,9 +9,18 @@ import Head from "next/head";
 import { useRouter } from "next/router";
 import React, { ReactElement, useEffect, useMemo, useState } from "react";
 
+const panelQueryName = "panel";
+const good = "いいね";
+const involved = "過去の作品";
+
 export default function ProfileView() {
   const router = useRouter();
   const uidFromURL = router.query.profile as string;
+  const [isGood, setGood] = useState(false);
+  useEffect(() => {
+    console.log("queryParam ", router.query[panelQueryName] == good);
+    setGood(router.query[panelQueryName] == good);
+  }, [router.query[panelQueryName] == good]);
   const uid = useMyUid();
   if (uid === uidFromURL) {
     return (
@@ -19,7 +28,7 @@ export default function ProfileView() {
         <Head>
           <title>MelodyChain-プロフィール</title>
         </Head>
-        <MyProfileView></MyProfileView>
+        <MyProfileView isGood={isGood}></MyProfileView>
       </>
     );
   } else {
@@ -28,34 +37,34 @@ export default function ProfileView() {
         <Head>
           <title>MelodyChain-プロフィール</title>
         </Head>
-        <OtherProfileView uid={uidFromURL}></OtherProfileView>
+        <OtherProfileView uid={uidFromURL} isGood={isGood}></OtherProfileView>
       </>
     );
   }
 }
 
-function MyProfileView() {
+function MyProfileView({ isGood }: { isGood: boolean }) {
   const [profile, setProfile] = useMyProfile();
   const [profileImage, setProfileImage] = useMyProfileImage();
   const [headerImage, setHeaderImage] = useMyHeaderImage();
-  return <ProfileComponent isMypage={true} profile={profile.getContent()} imageURL={profileImage.getContent()} headerURL={headerImage.getContent()}></ProfileComponent>;
+  return <ProfileComponent isGood={isGood} isMypage={true} profile={profile.getContent()} imageURL={profileImage.getContent()} headerURL={headerImage.getContent()}></ProfileComponent>;
 }
 
-function OtherProfileView({ uid }: { uid: string }) {
+function OtherProfileView({ uid, isGood }: { uid: string; isGood: boolean }) {
   const { data, error, isLoading } = useProfile(uid);
   if (data === null) {
     return <h1>存在しないユーザーです:{uid}</h1>;
   } else if (data === undefined) {
-    return <ProfileComponent isMypage={false} />;
+    return <ProfileComponent isMypage={false} isGood={isGood} />;
   } else {
-    return <ProfileWithImagesLoader profile={data} />;
+    return <ProfileWithImagesLoader profile={data} isGood={isGood} />;
   }
 }
 
-function ProfileWithImagesLoader({ profile }: { profile: Profile }) {
+function ProfileWithImagesLoader({ profile, isGood }: { profile: Profile; isGood: boolean }) {
   const { data: imageURL, error: imageError } = useProfileImage(profile);
   const { data: headerURL, error: headerError } = useHeaderImage(profile);
-  return <ProfileComponent isMypage={false} profile={profile} imageURL={imageURL} headerURL={headerURL} />;
+  return <ProfileComponent isMypage={false} profile={profile} imageURL={imageURL} headerURL={headerURL} isGood={isGood} />;
 }
 
 function HeaderImage({ imageURL }: { imageURL: string | null | undefined }) {
@@ -83,11 +92,13 @@ function ProfileComponent({
   imageURL,
   headerURL,
   isMypage,
+  isGood,
 }: {
   profile?: Profile | undefined | null;
   imageURL?: string | undefined | null;
   headerURL?: string | undefined | null;
   isMypage: boolean;
+  isGood: boolean;
 }) {
   const router = useRouter();
 
@@ -119,10 +130,12 @@ function ProfileComponent({
       <div className="my-6 mx-4">
         <div className=" border-secondary border rounded-md">
           <Panel
-            selectors={["過去の作品", "いいね"]}
+            initialState={isGood ? 1 : 0}
+            queryName={panelQueryName}
+            selectors={[involved, good]}
             nodes={[
-              <div key="過去の作品">{profile ? <InvolvedMusic uid={profile.getUid()}></InvolvedMusic> : null}</div>,
-              <div key="いいね">{profile ? <GoodHistory uid={profile.getUid()}></GoodHistory> : null}</div>,
+              <div key={involved}>{profile ? <InvolvedMusic uid={profile.getUid()} loadFirst={true}></InvolvedMusic> : null}</div>,
+              <div key={good}>{profile ? <GoodHistory uid={profile.getUid()} loadFirst={true}></GoodHistory> : null}</div>,
             ]}
           ></Panel>
         </div>

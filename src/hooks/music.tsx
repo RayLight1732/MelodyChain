@@ -16,8 +16,8 @@ import {
   subscribeViewedMusic,
 } from "@/libs/music";
 import { DispatchedMusic } from "@/libs/profile";
-import { DocumentSnapshot } from "firebase/firestore";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { DocumentData, DocumentSnapshot } from "firebase/firestore";
+import { ReactNode, RefObject, createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import useSWR, { SWRResponse } from "swr";
 
 /**
@@ -177,184 +177,132 @@ export function useViewCounter(music: Music, inclement: boolean): number {
 }
 
 /**
- * いいねをした楽曲の履歴
+ * いままで関わった楽曲の履歴
  */
-interface GoodHistoryLoader {
+interface Loader<T, U> {
   /**
-   * いいねをした楽曲のidのリスト(降順)
+   * いままで関わった楽曲の履歴のリスト(降順)
    */
-  history: string[];
+  history: T[];
   /**
    * 次をロードするための関数
    * @returns 次が存在するかどうか
    */
   loadNext: () => Promise<boolean>;
+
+  reload: () => Promise<void>;
+  /**
+   * 読み込まれたものの最後
+   */
+  last: U | null;
+}
+
+interface LoaderCache<T, U> {
+  history: T[];
+  last: U | null;
+}
+
+/**
+ * T:返り値の型
+ * U:lastの型
+ * @param load U型の引数以降のT型のリストを取得する。
+ * @param loaderCache キャッシュ
+ * @returns
+ */
+function useLoader<T, U>(load: (last?: U | null) => Promise<{ newLoaded: T[]; last: U | null | undefined }>, loaderCache?: LoaderCache<T, U> | null): Loader<T, U> {
+  const [loaded, setLoaded] = useState<T[]>(loaderCache?.history ?? []);
+  const lastRef = useRef<U | null>(loaderCache?.last ?? null);
+  const loadID = useRef(0);
+  const isLoading = useRef(false);
+  //ロード中の場合loadNextは呼び出されない
+  //リロードされた場合、その結果が優先される
+  const loadNext = useCallback(async () => {
+    console.log("loadNext");
+    if (!isLoading.current) {
+      const newID = ++loadID.current;
+      isLoading.current = true;
+      const result = await load(lastRef.current);
+      if (newID == loadID.current) {
+        if (result.newLoaded.length > 0) {
+          setLoaded((it) => it.concat(result.newLoaded));
+          lastRef.current = result.last ?? null;
+        }
+        isLoading.current = false;
+      }
+      return result.newLoaded.length !== 0;
+    } else {
+      return true;
+    }
+  }, []);
+  const reload = useCallback(async () => {
+    lastRef.current = null;
+    isLoading.current = false;
+    loadNext();
+  }, []);
+  return {
+    history: loaded,
+    loadNext: loadNext,
+    reload: reload,
+    last: lastRef.current,
+  };
+}
+
+class LoaderCacheMap {
+  private cacheMap: { [key: string]: LoaderCache<any, any> } = {};
+
+  get<T, U>(id: string): LoaderCache<T, U> | undefined {
+    return this.cacheMap[id];
+  }
+
+  set(id: string, cache: LoaderCache<any, any>) {
+    this.cacheMap[id] = cache;
+  }
+}
+
+const musicCacheMapContext = createContext<LoaderCacheMap>(new LoaderCacheMap());
+
+export function MusicCacheMapContextProvider({ children }: { children: ReactNode }) {
+  const ref = useRef(new LoaderCacheMap());
+  return <musicCacheMapContext.Provider value={ref.current}>{children}</musicCacheMapContext.Provider>;
 }
 
 /**
  * 今までにいいねをした楽曲を取得する
  * @param {string} uid 対象のUUID
- * @returns {GoodHistoryLoader}
+ * @returns {Loader<string, Date>} いいねをした楽曲のUUID
  */
-export function useGoodHistory(uid: string): GoodHistoryLoader {
-  const [goodHistory, setGoodHistory] = useState<GoodHistory[]>([]);
-  const goodHistoryRef = useRef<GoodHistory[]>([]);
-  const firstLoaded = useRef(false);
-  goodHistoryRef.current = goodHistory;
-  useEffect(() => {
-    var ignore = false;
-    getGoodHistory(uid)
-      .then((value) => {
-        if (!ignore) {
-          setGoodHistory(goodHistory.concat(value));
-          firstLoaded.current = true;
-        }
-      })
-      .catch((e) => {
-        console.error(e);
-      });
-    return () => {
-      ignore = true;
+export function useGoodHistory(uid: string): Loader<string, Date> {
+  const musicCacheMap = useContext(musicCacheMapContext);
+  const musicLoader = useLoader<string, Date>(async (last) => {
+    const result = await getGoodHistory(uid, last);
+    return {
+      newLoaded: result.map((it) => it.uid),
+      last: result[result.length - 1]?.date,
     };
-  }, []);
-  const [result, setResult] = useState<string[]>([]);
-  useEffect(() => {
-    setResult(goodHistory.map((it) => it.uid));
-  }, [goodHistory]);
-
-  const loadNext = useCallback(async () => {
-    if (firstLoaded.current) {
-      console.log("current", goodHistoryRef.current);
-      console.log("date", goodHistoryRef.current[goodHistoryRef.current.length - 1]?.date);
-      const result = await getGoodHistory(uid, goodHistoryRef.current[goodHistoryRef.current.length - 1]?.date);
-      setGoodHistory((it) => it.concat(result));
-      return result.length !== 0;
-    } else {
-      return true;
-    }
-  }, []);
-
-  return {
-    history: result,
-    loadNext: loadNext,
-  };
-}
-
-/**
- * いままで関わった楽曲の履歴
- */
-interface InvolvedMusicLoader {
-  /**
-   * いままで関わった楽曲の履歴のリスト(降順)
-   */
-  history: Music[];
-  /**
-   * 次をロードするための関数
-   * @returns 次が存在するかどうか
-   */
-  loadNext: () => Promise<boolean>;
+  }, musicCacheMap.get("good/" + uid));
+  musicCacheMap.set("good/" + uid, { history: musicLoader.history, last: musicLoader.last });
+  return musicLoader;
 }
 
 /**
  * いままで関わった楽曲を取得する
  * @param {string} uid 対象のUUID
- * @returns {InvolvedMusicLoader}
+ * @returns {Loader<Music, DocumentSnapshot<DocumentData, DocumentData> | null>}
  */
-export function useInvolvedMusic(uid: string): InvolvedMusicLoader {
-  const [involvedMusic, setInvolvedMusic] = useState<Music[]>([]);
-  const involvedMusicRef = useRef<Music[]>([]);
-  const lastMusicRef = useRef<DocumentSnapshot | null>(null);
-  involvedMusicRef.current = involvedMusic;
-  const firstLoaded = useRef(false);
-  useEffect(() => {
-    var ignore = false;
-    getInvolvedMusic(uid)
-      .then((result) => {
-        if (!ignore) {
-          setInvolvedMusic(result.musicList);
-          lastMusicRef.current = result.last;
-          firstLoaded.current = true;
-        }
-      })
-      .catch((e) => {
-        console.error(e);
-      });
-    return () => {
-      ignore = true;
-    };
-  }, []);
-
-  const loadNext = useCallback(async () => {
-    if (firstLoaded.current) {
-      const result = await getInvolvedMusic(uid, lastMusicRef.current);
-      console.log("result", result);
-      setInvolvedMusic((it) => it.concat(result.musicList));
-      lastMusicRef.current = result.last;
-      return result.musicList.length !== 0;
-    } else {
-      return true;
-    }
-  }, []);
-
-  return {
-    history: involvedMusic,
-    loadNext: loadNext,
-  };
+export function useInvolvedMusic(uid: string): Loader<Music, DocumentSnapshot<DocumentData, DocumentData> | null> {
+  const musicCacheMap = useContext(musicCacheMapContext);
+  const musicLoader = useLoader<Music, DocumentSnapshot<DocumentData, DocumentData>>(async (last) => await getInvolvedMusic(uid, last), musicCacheMap.get("involved/" + uid));
+  musicCacheMap.set("involved/" + uid, { history: musicLoader.history, last: musicLoader.last });
+  return musicLoader;
 }
 
 /**
- * 投稿された楽曲を取得する
+ * 投稿された曲を取得する
+ * @returns {Loader<Music, DocumentSnapshot<DocumentData, DocumentData> | null>}
  */
-interface InvolvedMusicLoader {
-  /**
-   * 投稿された楽曲のリスト
-   */
-  history: Music[];
-  /**
-   * 次をロードするための関数
-   * @returns 次が存在するかどうか
-   */
-  loadNext: () => Promise<boolean>;
-}
-
-export function useUploadedMusic() {
-  const [involvedMusic, setInvolvedMusic] = useState<Music[]>([]);
-  const involvedMusicRef = useRef<Music[]>([]);
-  const lastMusicRef = useRef<DocumentSnapshot | null>(null);
-  involvedMusicRef.current = involvedMusic;
-  const firstLoaded = useRef(false);
-  useEffect(() => {
-    var ignore = false;
-    getUploadedMusic()
-      .then((result) => {
-        if (!ignore) {
-          setInvolvedMusic(result.musicList);
-          lastMusicRef.current = result.last;
-          firstLoaded.current = true;
-        }
-      })
-      .catch((e) => {
-        console.error(e);
-      });
-    return () => {
-      ignore = true;
-    };
-  }, []);
-
-  const loadNext = useCallback(async () => {
-    if (firstLoaded.current) {
-      const result = await getUploadedMusic(lastMusicRef.current);
-      console.log("result", result);
-      setInvolvedMusic((it) => it.concat(result.musicList));
-      lastMusicRef.current = result.last;
-      return result.musicList.length !== 0;
-    } else {
-      return true;
-    }
-  }, []);
-
-  return {
-    history: involvedMusic,
-    loadNext: loadNext,
-  };
+export function useUploadedMusic(): Loader<Music, DocumentSnapshot<DocumentData, DocumentData> | null> {
+  const musicCacheMap = useContext(musicCacheMapContext);
+  const musicLoader = useLoader(getUploadedMusic, musicCacheMap.get("uploaded"));
+  musicCacheMap.set("uploaded", { history: musicLoader.history, last: musicLoader.last });
+  return musicLoader;
 }

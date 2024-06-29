@@ -83,7 +83,7 @@ export async function getInvolvedMusic(
   startAfter: any = null,
   limit = 2
 ): Promise<{
-  musicList: Array<Music>;
+  newLoaded: Array<Music>;
   last: DocumentSnapshot<DocumentData, DocumentData> | null;
 }> {
   //即時関数
@@ -97,7 +97,11 @@ export async function getInvolvedMusic(
   })();
 
   const querySnapshot = await getDocs(q);
-  return querySnapshotToMusicList(querySnapshot);
+  const result = querySnapshotToMusicList(querySnapshot);
+  return {
+    newLoaded: result.musicList,
+    last: result.last,
+  };
 }
 
 /**
@@ -117,7 +121,11 @@ export async function getUploadedMusic(startAfter: any = null, limit = 10) {
     }
   })();
 
-  return querySnapshotToMusicList(await getDocs(q));
+  const result = querySnapshotToMusicList(await getDocs(q));
+  return {
+    newLoaded: result.musicList,
+    last: result.last,
+  };
 }
 
 /**
@@ -317,7 +325,7 @@ export class GoodHistory {
  * @param {number} [limit=10] 読み込む履歴の数
  * @returns {Promise<GoodHistory[]>}
  */
-export async function getGoodHistory(uid: string, before?: Date, limit: number = 4): Promise<GoodHistory[]> {
+export async function getGoodHistory(uid: string, before?: Date | null, limit: number = 4): Promise<GoodHistory[]> {
   const musicRef = rdbRef(rdb, createUserSideGoodRef(uid));
   var q: Query;
   if (before) {
