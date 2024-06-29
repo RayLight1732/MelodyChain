@@ -1,36 +1,24 @@
 import { MusicInfo, MusicPlayer, MusicPreview } from "@/components/music";
-import { Music, getMusicDetail } from "@/libs/music";
+import { useMusicDetail } from "@/hooks/music";
 import { useRouter } from "next/router";
-import React, { useEffect, useState } from "react";
+import React from "react";
 
-//TODO useSWR
 export default function MusicView() {
   const router = useRouter();
   const musicId = router.query.music as string;
-  const [music, setMusic] = useState<Music | null | undefined>();
-  useEffect(() => {
-    let ignore = false;
-    const func = async () => {
-      const detail = await getMusicDetail(musicId);
-      if (!ignore) {
-        setMusic(detail);
-      }
-    };
-    func();
-    return () => {
-      ignore = true;
-    };
-  }, [musicId]);
+  const { data, isLoading, error } = useMusicDetail(musicId);
 
-  if (music == null) {
+  if (!isLoading && data == null) {
     return <p>存在しない曲です</p>;
-  } else {
+  } else if (data != null) {
     return (
       <>
-        <MusicPreview music={music} />
-        <MusicInfo music={music} inclementViewCount={true}></MusicInfo>
-        <MusicPlayer music={music} />
+        <MusicPreview music={data} />
+        <MusicInfo music={data} inclementViewCount={true}></MusicInfo>
+        <MusicPlayer music={data} />
       </>
     );
+  } else {
+    return null;
   }
 }
