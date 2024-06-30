@@ -30,6 +30,10 @@ class ScrollHistory {
   getScrollTop(): number {
     return this.scrollTop;
   }
+
+  reset() {
+    this.scrollTop = 0;
+  }
 }
 
 const scrollHistoryContext = createContext<[ScrollHistoryMap, RefObject<HTMLDivElement> | null]>([new ScrollHistoryMap(), null]);
