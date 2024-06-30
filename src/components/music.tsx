@@ -49,7 +49,17 @@ export function PlayableMusicPreview({ music }: { music: Music }) {
       >
         <MusicPreview music={music}></MusicPreview>
         <MusicInfo music={music} inclementViewCount={inclementViewCount}></MusicInfo>
-        <TrackPlayer playing={audioManager?.isPlaying(4) ?? false} text="全て再生" key={100} onClick={() => audioManager?.togglePlayPoseAll()} noImage={true} isLoadEnded={true}></TrackPlayer>
+        <TrackPlayer
+          playing={audioManager?.isPlaying(4) ?? false}
+          text="全て再生"
+          key={100}
+          onClick={(e) => {
+            e.stopPropagation();
+            audioManager?.togglePlayPoseAll();
+          }}
+          noImage={true}
+          isLoadEnded={true}
+        ></TrackPlayer>
       </div>
     </>
   );
@@ -89,7 +99,8 @@ export function MusicInfo({ music, className = "", inclementViewCount }: { music
     <div className={"w-full flex justify-between px-4 " + className}>
       <p className="bg-secondary rounded-full px-4 py-2">{fmt.format(viewCount)}回試聴</p>
       <div
-        onClick={() => {
+        onClick={(e) => {
+          e.stopPropagation();
           setPressed(!isPressed);
         }}
         onMouseDown={() => {
