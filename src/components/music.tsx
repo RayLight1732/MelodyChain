@@ -3,7 +3,7 @@ import { MouseEventHandler, useEffect, useMemo, useState } from "react";
 
 import { InfiniteScrollViewer, PlayButton, SpinningLoader } from "./utlis";
 import { useRouter } from "next/router";
-import { useGoodCounter, useGoodHistory, useInvolvedMusic, useMusicDetail, useThumbnailURL, useTrackURLs, useUploadedMusic, useViewCounter } from "@/hooks/music";
+import { useGoodCounter, useGoodHistory, useInvolvedMusic, useMusicDetail, useThumbnailURL, useTrackURL, useTrackURLs, useUploadedMusic, useViewCounter } from "@/hooks/music";
 import { indexToPartName } from "@/libs/utils";
 import { useAudioManager } from "@/hooks/audioManager";
 
@@ -28,6 +28,32 @@ export function JumpableMusicPreview({ music }: { music: Music | null | undefine
     </div>
   );
 }
+
+export function PlayableMusicPreview({ music }: { music: Music }) {
+  const { data: urls } = useTrackURLs(music);
+  const audioManager = useAudioManager(music.id, urls);
+  const [inclementViewCount, setInclementViewCount] = useState(false);
+  const router = useRouter();
+  useEffect(() => {
+    setInclementViewCount((value) => value || (audioManager?.isPlaying(4) ?? false));
+  }, [audioManager?.isPlaying(4) ?? false]);
+  return (
+    <>
+      <div
+        onClick={(e) => {
+          if (music) {
+            router.push(`/music/${music.id}`);
+          }
+        }}
+        className="cursor-pointer hover:bg-gray-100 p-1 rounded-md"
+      >
+        <MusicPreview music={music}></MusicPreview>
+        <MusicInfo music={music} inclementViewCount={inclementViewCount}></MusicInfo>
+        <TrackPlayer playing={audioManager?.isPlaying(4) ?? false} text="全て再生" key={100} onClick={() => audioManager?.togglePlayPoseAll()} noImage={true} isLoadEnded={true}></TrackPlayer>
+      </div>
+    </>
+  );
+}
 //TODO error handling
 export function MusicPreview({ music }: { music: Music | null | undefined }) {
   const { data: src } = useThumbnailURL(music);
@@ -36,11 +62,11 @@ export function MusicPreview({ music }: { music: Music | null | undefined }) {
     if (src == null) {
       return (
         <>
-          <div className="w-full aspect-[4/3] object-cover bg-gray-400"></div>
+          <div className="w-full aspect-[4/3] object-cover bg-gray-400 rounded-md"></div>
         </>
       );
     } else {
-      return <img src={src} className="w-full aspect-[4/3] object-cover"></img>;
+      return <img src={src} className="w-full aspect-[4/3] object-cover rounded-md"></img>;
     }
   };
 
@@ -204,7 +230,7 @@ export function UploadedMusic() {
     <InfiniteScrollViewer
       loadNext={loadNext}
       loaded={history.map((it) => (
-        <JumpableMusicPreview music={it} key={it.id}></JumpableMusicPreview>
+        <PlayableMusicPreview music={it} key={it.id}></PlayableMusicPreview>
       ))}
     ></InfiniteScrollViewer>
   );
