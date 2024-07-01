@@ -1,23 +1,9 @@
-import {
-  GoogleAuthProvider,
-  Unsubscribe,
-  signOut as fbSignOut,
-  signInWithRedirect,
-} from "firebase/auth";
+import { GoogleAuthProvider, Unsubscribe, signOut as fbSignOut, signInWithPopup, signInWithRedirect } from "firebase/auth";
 import { auth, db } from "./initialize";
-import {
-  CollectionReference,
-  collection,
-  deleteDoc,
-  doc,
-  onSnapshot,
-  serverTimestamp,
-  setDoc,
-} from "firebase/firestore";
+import { CollectionReference, collection, deleteDoc, doc, onSnapshot, serverTimestamp, setDoc } from "firebase/firestore";
 import { getToken } from "firebase/messaging";
 
-const vapidKey =
-  "BPsx8odGYwd3o7Crq-ekf29o9PoLn3SJ30fBgqS3Q76jkFjcptMseaAVIripyTmHo8yUQAc1Z2UxbgrlzRrEtRY";
+const vapidKey = "BPsx8odGYwd3o7Crq-ekf29o9PoLn3SJ30fBgqS3Q76jkFjcptMseaAVIripyTmHo8yUQAc1Z2UxbgrlzRrEtRY";
 
 function getUserTokenCollection(uid: string): CollectionReference {
   return collection(db, "users", uid, "token");
@@ -28,10 +14,7 @@ function getUserTokenCollection(uid: string): CollectionReference {
  * @param {} onAuthenticated ログインが完了している際に呼び出されるコールバック
  * @param {} onNotAuthenticated ログインが完了していない際に呼び出されるコールバック
  */
-export function onAuthStateChanged(
-  onAuthenticated: () => void,
-  onNotAuthenticated: () => void
-): Unsubscribe {
+export function onAuthStateChanged(onAuthenticated: () => void, onNotAuthenticated: () => void): Unsubscribe {
   return auth.onAuthStateChanged((user) => {
     if (!user) {
       onNotAuthenticated();
@@ -55,9 +38,7 @@ export async function signOut() {
     });*/
     const token = null;
     if (token) {
-      const promise2 = deleteDoc(
-        doc(getUserTokenCollection(currentUser.uid), token)
-      );
+      const promise2 = deleteDoc(doc(getUserTokenCollection(currentUser.uid), token));
       await Promise.allSettled([promise1, promise2]);
     }
   }
@@ -93,5 +74,9 @@ provider.setCustomParameters({
 
 export function loginWithGoogle() {
   console.log("login");
-  signInWithRedirect(auth, provider);
+  if (process.env.NODE_ENV == "development") {
+    signInWithPopup(auth, provider);
+  } else {
+    signInWithRedirect(auth, provider);
+  }
 }
