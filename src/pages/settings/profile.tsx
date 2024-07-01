@@ -34,10 +34,10 @@ export default function ProfileEditor() {
 
   const dialogFactory = useCallback((onConfirm: () => void, oncancel: () => void) => {
     return (
-      <div className="flex flex-col bg-white max-w-80 w-[80vw] p-8 rounded-xl">
+      <div className="flex flex-col bg-primary max-w-80 w-[80vw] p-8 rounded-xl">
         <p className="mx-auto text-warn text-lg font-bold">編集内容を破棄しますか</p>
         <p className="mx-auto mt-2 text-accent ">この操作は取り消しできません。編集内容は失われます。</p>
-        <button className="w-40 mt-8 border-2 border-warn bg-warn text-white rounded-full px-2 mx-auto text-xl focus:outline-none" onClick={onConfirm}>
+        <button className="w-40 mt-8 border-2 border-warn bg-warn text-primary rounded-full px-2 mx-auto text-xl focus:outline-none" onClick={onConfirm}>
           破棄
         </button>
         <button className="w-40 mt-8 border-2 border-accent rounded-full px-2 mx-auto text-xl focus:outline-none" onClick={oncancel}>
@@ -85,7 +85,7 @@ export default function ProfileEditor() {
       </Head>
       {confirmDialog}
       <CustomDialog isOpen={isErrorDialogShown} onClose={() => showErrorDialog(false)}>
-        <div className="flex flex-col bg-white max-w-80 w-[80vw] p-8 rounded-xl">
+        <div className="flex flex-col bg-primary max-w-80 w-[80vw] p-8 rounded-xl">
           <p className="text-warn text-lg font-bold">エラー:</p>
           <p className="mt-2 text-accent text-lg">プロフィールの更新に失敗しました。</p>
           <button className="w-40 mt-8 border-2 border-accent rounded-full px-2 mx-auto text-xl focus:outline-none" onClick={() => showErrorDialog(false)}>
@@ -94,10 +94,10 @@ export default function ProfileEditor() {
         </div>
       </CustomDialog>
       <CustomDialog isOpen={isWarnDialogShown} onClose={() => showWarnDialog(false)}>
-        <div className="flex flex-col bg-white max-w-80 w-[80vw] p-8 rounded-xl">
+        <div className="flex flex-col bg-primary max-w-80 w-[80vw] p-8 rounded-xl">
           <p className="mx-auto text-warn text-lg font-bold">編集内容を破棄しますか</p>
           <p className="mx-auto mt-2 text-accent ">この操作は取り消しできません。編集内容は失われます。</p>
-          <button className="w-40 mt-8 border-2 border-warn bg-warn text-white rounded-full px-2 mx-auto text-xl focus:outline-none" onClick={() => showWarnDialog(false)}>
+          <button className="w-40 mt-8 border-2 border-warn bg-warn text-primary rounded-full px-2 mx-auto text-xl focus:outline-none" onClick={() => showWarnDialog(false)}>
             破棄
           </button>
           <button className="w-40 mt-8 border-2 border-accent rounded-full px-2 mx-auto text-xl focus:outline-none" onClick={() => showWarnDialog(false)}>
@@ -125,7 +125,7 @@ export default function ProfileEditor() {
             <PartSelector defaultValue={profile.getContent()?.part} allPartState={allPartState} setAllPartState={setAllPartState}></PartSelector>
           </div>
 
-          <button type="submit" className="bg-black text-white w-fit mx-auto py-2 px-4 rounded-full text-xl disabled:bg-secondary" disabled={nameValueState[0].length == 0}>
+          <button type="submit" className="bg-black text-primary w-fit mx-auto py-2 px-4 rounded-full text-xl disabled:bg-secondary" disabled={nameValueState[0].length == 0}>
             更新
           </button>
         </div>
@@ -183,7 +183,7 @@ function PartItem({
             }
           }}
         />
-        <span className="absolute text-white transition-opacity opacity-0 pointer-events-none top-2/4 left-2/4 -translate-y-2/4 -translate-x-2/4 peer-checked:opacity-100">
+        <span className="absolute text-primary transition-opacity opacity-0 pointer-events-none top-2/4 left-2/4 -translate-y-2/4 -translate-x-2/4 peer-checked:opacity-100">
           <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor" stroke="currentColor" strokeWidth="1">
             <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"></path>
           </svg>
@@ -289,7 +289,7 @@ function HeaderImageDisplay({ headerImageURL }: { headerImageURL?: string | null
       <>
         <img className="w-full aspect-[2.618/1] object-cover bg-gray-300" src={headerImageURL}></img>
         <div className="absolute top-0 w-full aspect-[2.618/1] object-cover  bg-black bg-opacity-45 flex justify-center align-middle cursor-pointer">
-          <div className="m-auto h-[40%] aspect-square relative bg-white rounded-full flex align-middle justify-center">
+          <div className="m-auto h-[40%] aspect-square relative bg-primary rounded-full flex align-middle justify-center">
             <img className="w-[50%]" src="/images/camera.svg"></img>
           </div>
         </div>
@@ -306,7 +306,7 @@ function ProfileImageDisplay({ profileImageURL }: { profileImageURL?: string | n
       <>
         <img className="absolute top-[70%] left-5 h-[61%] aspect-[1/1] bg-gray-500 rounded-full" src={profileImageURL}></img>
         <div className="absolute top-[70%] left-5 h-[61%] aspect-[1/1] bg-black bg-opacity-45 rounded-full flex align-middle justify-center cursor-pointer">
-          <div className="m-auto w-[40%] aspect-square relative bg-white rounded-full flex align-middle justify-center">
+          <div className="m-auto w-[40%] aspect-square relative bg-primary rounded-full flex align-middle justify-center">
             <img className="w-[50%]" src="/images/camera.svg"></img>
           </div>
         </div>

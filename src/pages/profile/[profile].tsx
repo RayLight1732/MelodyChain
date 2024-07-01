@@ -100,7 +100,7 @@ function ProfileComponent({
       <div className="w-full aspect-[2.618/0.305] flex flex-wrap">
         <div className="w-20 h-10 flex-grow"></div>
         {isMypage && (
-          <p className=" my-auto mx-5 px-3 py-1 text font-bold break-words border rounded-full border-accent cursor-pointer hover:bg-gray-100" onClick={() => router.push("/settings/profile")}>
+          <p className=" my-auto mx-5 px-3 py-1 text font-bold break-words border rounded-full border-accent cursor-pointer hover:bg-hsecondary" onClick={() => router.push("/settings/profile")}>
             プロフィールを編集
           </p>
         )}

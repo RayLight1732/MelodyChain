@@ -12,7 +12,7 @@ export default function DataProvider({ uid, requireProfile, loadingComponent, ch
           <ProfileImageContextProvider uid={uid}>
             <HeaderImageContextProvider uid={uid}>
               <ProfileLoadObserver requireProfile={requireProfile} loadingComponent={loadingComponent}>
-                <div className="flex flex-col w-screen max-w-[30rem] mx-auto h-[100dvh]">
+                <div className="bg-primary flex flex-col w-screen max-w-[30rem] mx-auto h-[100dvh]">
                   <Header></Header>
                   <div className="flex-grow overflow-y-auto w-screen max-w-[30rem]" id="container">
                     {children}

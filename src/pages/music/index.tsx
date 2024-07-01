@@ -87,7 +87,7 @@ function FileSelectButton({
     <div
       className={
         (selectedFile && !isValidFile ? "bg-[#882323d5] line-through hover:bg-[#bd0000]" : "bg-[#007bff] hover:bg-[#0026ffab]") +
-        " m-auto py-2.5 px-5 rounded-md text-white cursor-pointer  overflow-hidden overflow-ellipsis max-w-60 whitespace-nowrap select-none"
+        " m-auto py-2.5 px-5 rounded-md text-primary cursor-pointer  overflow-hidden overflow-ellipsis max-w-60 primaryspace-nowrap select-none"
       }
       onClick={(e) =>
         showFileChoosePopup(acceptType, (e) => {
@@ -142,7 +142,7 @@ function UploadButton({
   className?: string;
   setUploaded: Dispatch<SetStateAction<boolean>>;
 }) {
-  className = "text-white py-2.5 px-4 rounded-md select-none " + className;
+  className = "text-primary py-2.5 px-4 rounded-md select-none " + className;
   const [error, setError] = useState<any>();
   if (canUploadFile(part, file, isValidFile, thumbnail, title)) {
     const onClick = async () => {

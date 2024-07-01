@@ -89,7 +89,7 @@ export function CropAreaSelector({ src, areaRef, exportRatio, rounded = false }:
   }, [ratio]);
 
   return (
-    <div className={" bg-white z-[101] relative w-full flex-grow select-none h-full"} style={{ clipPath: "polygon(0% 0%,0% 100%,100% 100%, 100% 0%)" }} ref={parentContainerRef}>
+    <div className={" bg-primary z-[101] relative w-full flex-grow select-none h-full"} style={{ clipPath: "polygon(0% 0%,0% 100%,100% 100%, 100% 0%)" }} ref={parentContainerRef}>
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-full" style={{ width: widthRatio + "%" }}>
         <div
           className={"w-full h-full z-[102] pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 mask-shadow-black/60 outline " + (rounded ? "rounded-full" : "")}
@@ -208,11 +208,11 @@ export function ImageCropDialog({
         }}
         className="flex-grow h-full flex flex-col"
       >
-        <div className="bg-white flex-grow flex flex-col p-1">
+        <div className="bg-primary flex-grow flex flex-col p-1">
           <div onClick={() => setDialogVisible(false)}>←</div>
           <CropAreaSelector src={src} areaRef={area} exportRatio={exportWidth / exportHeight} rounded={rounded}></CropAreaSelector>
           <div
-            className="bg-white"
+            className="bg-primary"
             onClick={() => {
               cropImage(src, exportWidth, exportHeight, area.current, (blob) => {
                 blobRef.current = blob;

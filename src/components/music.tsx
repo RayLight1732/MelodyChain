@@ -22,7 +22,7 @@ export function JumpableMusicPreview({ music }: { music: Music | null | undefine
           router.push(`/music/${music.id}`);
         }
       }}
-      className="cursor-pointer hover:bg-gray-100 p-1 rounded-md"
+      className="cursor-pointer hover:bg-hprimary p-1 rounded-md"
     >
       <MusicPreview music={music}></MusicPreview>
     </div>
@@ -45,7 +45,7 @@ export function PlayableMusicPreview({ music }: { music: Music }) {
             router.push(`/music/${music.id}`);
           }
         }}
-        className="cursor-pointer hover:bg-gray-100 p-1 rounded-md"
+        className="cursor-pointer hover:bg-hprimary p-1 rounded-md"
       >
         <MusicPreview music={music}></MusicPreview>
         <MusicInfo music={music} inclementViewCount={inclementViewCount}></MusicInfo>

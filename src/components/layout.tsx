@@ -9,7 +9,7 @@ import dynamic from "next/dynamic";
 
 export function Header() {
   return (
-    <header className="flex justify-between items-center px-5 py-2.5 border-b-2 divide-solid border-accent bg-white z-40">
+    <header className="flex justify-between items-center px-5 py-2.5 border-b-2 divide-solid border-accent bg-primary z-40">
       <div className="logo left-logo">
         <img src="/images/logo_small.png" alt="" className="w-[60px] h-[60px]" />
       </div>
@@ -23,7 +23,7 @@ export function Header() {
 export function Footer() {
   const profileURL: string = useMyProfileImage()[0].getContent() ?? "/images/tmp-profile.png";
   return (
-    <footer className="grid grid-cols-3 px-5 py-2.5 border-t-2 divide-solid border-accent bg-white z-40">
+    <footer className="grid grid-cols-3 px-5 py-2.5 border-t-2 divide-solid border-accent bg-primary z-40">
       <div>
         <Link href="/top" className="text-center flex justify-center h-full">
           <img src="/images/home.svg" className="w-[35px] h-[35px] m-auto block" alt="top" />
