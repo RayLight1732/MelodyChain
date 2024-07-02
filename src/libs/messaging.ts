@@ -9,9 +9,9 @@ onBackgroundMessage(getMessaging(firebaseApp), (payload) => {
 });*/
 
 import { getToken } from "firebase/messaging";
-import { auth, db, messaging, rdb, storage } from "./initialize";
+import { auth, db, messaging, rdb } from "./initialize";
 import { get, ref as rdbRef } from "firebase/database";
-import { arrayRemove, arrayUnion, doc, serverTimestamp, setDoc, updateDoc } from "firebase/firestore";
+import { deleteField, doc, serverTimestamp, setDoc, updateDoc } from "firebase/firestore";
 async function getVapidKey(): Promise<string> {
   const snapshot = await get(rdbRef(rdb, "vapidKey"));
   return snapshot.val();
@@ -35,6 +35,7 @@ function getTokenDoc(uid: string) {
 }
 
 export function registerToken(token: string): Promise<void> {
+  console.log("register token", token);
   return setDoc(
     getTokenDoc(auth.currentUser!.uid),
     {
@@ -48,5 +49,5 @@ export function registerToken(token: string): Promise<void> {
 }
 
 export function unregisterToken(token: string): Promise<void> {
-  return setDoc(getTokenDoc(auth.currentUser!.uid), { [token]: null }, { merge: true });
+  return updateDoc(getTokenDoc(auth.currentUser!.uid), token, deleteField());
 }

@@ -4,6 +4,7 @@ import { Footer, Header } from "./layout";
 import { ReactNode, useEffect, useState } from "react";
 import { AudioContextProvider } from "@/hooks/context";
 import { FCMTokenContextProvider } from "@/hooks/fcmToken";
+import { NotificationContextProvider } from "@/hooks/notificationProvider";
 
 export default function DataProvider({ uid, requireProfile, loadingComponent, children }: { uid: string; requireProfile: boolean; loadingComponent: ReactNode; children: ReactNode }) {
   return (
@@ -13,15 +14,17 @@ export default function DataProvider({ uid, requireProfile, loadingComponent, ch
           <ProfileImageContextProvider uid={uid}>
             <HeaderImageContextProvider uid={uid}>
               <FCMTokenContextProvider uid={uid}>
-                <ProfileLoadObserver requireProfile={requireProfile} loadingComponent={loadingComponent}>
-                  <div className="bg-primary flex flex-col w-screen max-w-[30rem] mx-auto h-[100dvh]">
-                    <Header></Header>
-                    <div className="flex-grow overflow-y-auto w-screen max-w-[30rem]" id="container">
-                      {children}
+                <NotificationContextProvider>
+                  <ProfileLoadObserver requireProfile={requireProfile} loadingComponent={loadingComponent}>
+                    <div className="bg-primary flex flex-col w-screen max-w-[30rem] mx-auto h-[100dvh]">
+                      <Header></Header>
+                      <div className="flex-grow overflow-y-auto w-screen max-w-[30rem]" id="container">
+                        {children}
+                      </div>
+                      <Footer></Footer>
                     </div>
-                    <Footer></Footer>
-                  </div>
-                </ProfileLoadObserver>
+                  </ProfileLoadObserver>
+                </NotificationContextProvider>
               </FCMTokenContextProvider>
             </HeaderImageContextProvider>
           </ProfileImageContextProvider>

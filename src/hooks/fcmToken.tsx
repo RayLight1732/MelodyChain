@@ -10,12 +10,14 @@ export function FCMTokenContextProvider({ uid, children }: { uid: string; childr
     Notification.requestPermission().then(setNotificationPermissionStatus);
   }, []);
   useEffect(() => {
+    var ignore = false;
     const retrieveToken = async () => {
       try {
         if (typeof window !== "undefined" && "serviceWorker" in navigator) {
           if (permissionStatus === "granted") {
             const currentToken = await getFCMToken();
-            if (currentToken) {
+            if (currentToken && !ignore) {
+              console.log("set token");
               setToken(currentToken);
               registerToken(currentToken);
             } else {
@@ -29,6 +31,9 @@ export function FCMTokenContextProvider({ uid, children }: { uid: string; childr
     };
 
     retrieveToken();
+    return () => {
+      ignore = true;
+    };
   }, [permissionStatus]);
 
   return <fcmTokenContext.Provider value={{ token, permissionStatus, request }}>{children}</fcmTokenContext.Provider>;

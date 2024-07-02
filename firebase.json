@@ -26,6 +26,10 @@
       {
         "regex":"^/music(?:/)?$",
         "destination":"/music.html"
+      },
+      {
+        "regex":"^/notification(?:/)?$",
+        "destination":"/notification.html"
       }
     ]
   }

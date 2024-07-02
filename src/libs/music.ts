@@ -42,7 +42,7 @@ export class Music {
 
   static getInstance(snapshot: DocumentSnapshot) {
     const data = snapshot.data()!;
-    return new Music(data.id, data.name, data.thumbnailRef, data.authorIDs, data.musicRefs, data.date);
+    return new Music(data.id, data.name, data.thumbnailRef, data.authorIDs, data.musicRefs, new Date(data.date * 1000));
   }
 }
 
