@@ -16,6 +16,7 @@ function getUserTokenCollection(uid: string): CollectionReference {
  * @param {} onNotAuthenticated ログインが完了していない際に呼び出されるコールバック
  */
 export function onAuthStateChanged(onAuthenticated: () => void, onNotAuthenticated: () => void): Unsubscribe {
+export function onAuthStateChanged(onAuthenticated: () => void, onNotAuthenticated: () => void): Unsubscribe {
   return auth.onAuthStateChanged((user) => {
     if (!user) {
       onNotAuthenticated();
@@ -57,7 +58,9 @@ provider.setCustomParameters({
 
 export function loginWithGoogle() {
   console.log("login");
-  signInWithRedirect(auth, provider);
-  //TODO
-  //signInWithPopup(auth, provider);
+  if (process.env.NODE_ENV == "development") {
+    signInWithPopup(auth, provider);
+  } else {
+    signInWithRedirect(auth, provider);
+  }
 }

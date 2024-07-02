@@ -10,6 +10,9 @@ const config: Config = {
       ...theme("colors"),
     }),
     extend: {
+      backgroundImage: {
+        google: "url('https://developers.google.com/identity/images/g-logo.png?hl=ja')",
+      },
       colors: {
         primary: "var(--primary)",
         hprimary: "var(--hprimary)",

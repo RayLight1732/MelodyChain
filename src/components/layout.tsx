@@ -1,20 +1,48 @@
-import { onAuthStateChanged } from "@/libs/auth";
+import { onAuthStateChanged, signOut } from "@/libs/auth";
 import React, { ReactNode, useEffect, useMemo, useState } from "react";
 import Login from "./login";
 import { Loading } from "./loading";
 import Link from "next/link";
 import { auth } from "@/libs/initialize";
-import { useMyProfileImage } from "./profile";
+import { useMyProfile, useMyProfileImage } from "./profile";
 import dynamic from "next/dynamic";
 
 export function Header() {
+  const [profile] = useMyProfile();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
   return (
-    <header className="flex justify-between items-center px-5 py-2.5 border-b-2 divide-solid border-accent bg-primary z-40">
-      <div className="logo left-logo">
+    <header className="flex justify-between items-center px-5 py-2.5 border-b-2 divide-solid border-accent bg-primary z-50">
+      <div
+        className="logo left-logo cursor-pointer"
+        onClick={() => {
+          setSidebarOpen(true);
+        }}
+      >
         <img src="/images/logo_small.png" alt="" className="w-[60px] h-[60px]" />
       </div>
       <div className="logo right-logo">
         <img src="/images/bell.png" alt="" />
+      </div>
+      <div
+        className={`top-0 left-0 h-full w-full absolute bg-black/40 z-50 transition-opacity duration-300 ${sidebarOpen ? "opacity-100" : "opacity-0 pointer-events-none"}`}
+        onClick={() => {
+          setSidebarOpen(false);
+        }}
+      >
+        <div className={`h-full bg-primary transition-transform duration-300 transform ${sidebarOpen ? "translate-x-0 w-48" : "-translate-x-full w-0"}`}>
+          <div className="px-1 py-2.5 space-y-3">
+            <p className="mx-5 text-xl font-semibold">{profile.getContent()?.name}</p>
+            <button
+              className="font-semibold hover:bg-hsecondary w-full text-left px-6 py-1 rounded-md"
+              onClick={() => {
+                signOut();
+              }}
+            >
+              ログアウト
+            </button>
+          </div>
+        </div>
       </div>
     </header>
   );

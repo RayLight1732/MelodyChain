@@ -101,19 +101,35 @@ function useImageSetter(uid: string, stateSetter: (value: SetStateAction<FetchRe
   );
 }
 
+/**
+ *
+ * @returns アカウントの持ち主のUUID
+ */
 export function useMyUid() {
   return useContext(UidContext);
 }
 
+/**
+ *
+ * @returns [アカウントの持ち主のプロフィール,プロフィール更新用関数]
+ */
 export function useMyProfile(): [FetchResult<Profile>, (name: string, favorite: string, part: Array<number>) => Promise<void>] {
   const profile = useContext(ProfileContext);
   return [profile, uploadProfile];
 }
 
+/**
+ *
+ * @returns アカウントの持ち主のプロフィール画像
+ */
 export function useMyProfileImage() {
   return useContext(ProfileImageContext);
 }
 
+/**
+ *
+ * @returns アカウントの持ち主のヘッダー画像
+ */
 export function useMyHeaderImage() {
   return useContext(HeaderImageContext);
 }
