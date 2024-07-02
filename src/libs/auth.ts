@@ -16,7 +16,6 @@ function getUserTokenCollection(uid: string): CollectionReference {
  * @param {} onNotAuthenticated ログインが完了していない際に呼び出されるコールバック
  */
 export function onAuthStateChanged(onAuthenticated: () => void, onNotAuthenticated: () => void): Unsubscribe {
-export function onAuthStateChanged(onAuthenticated: () => void, onNotAuthenticated: () => void): Unsubscribe {
   return auth.onAuthStateChanged((user) => {
     if (!user) {
       onNotAuthenticated();
