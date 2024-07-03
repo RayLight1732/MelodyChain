@@ -19,11 +19,17 @@ export class Notification {
     return this._date;
   }
 
-  constructor(id: string, title: string, body: string, date: Date) {
+  private _link: string | null;
+  get link() {
+    return this._link;
+  }
+
+  constructor(id: string, title: string, body: string, date: Date, link: string | null) {
     this._id = id;
     this._title = title;
     this._body = body;
     this._date = date;
+    this._link = link;
   }
 }
 
@@ -39,9 +45,9 @@ export function subscribeNotification(observer: (notifications: Notification[]) 
     const data = snapshot.docs
       .map((snapshot) => {
         const data = snapshot.data();
-        return new Notification(data.id, data.title, data.body, new Date(data.date * 1000));
+        return new Notification(data.id, data.title, data.body, data.date.toDate(), data.link);
       })
-      .sort((a, b) => a.date.getTime() - b.date.getTime());
+      .sort((a, b) => b.date.getTime() - a.date.getTime());
     observer(data);
   });
 }
@@ -50,7 +56,8 @@ export function subscribeNotification(observer: (notifications: Notification[]) 
  * 最後に通知を見た日時を現在の時刻に更新する
  */
 export function updateLastWatchTime() {
-  setDoc(doc(db, "notifications", auth.currentUser!.uid), { lastWatch: serverTimestamp() });
+  console.log("update time");
+  return setDoc(doc(db, "notifications", auth.currentUser!.uid), { lastWatch: serverTimestamp() });
 }
 
 /**
@@ -61,7 +68,7 @@ export async function getLastWatchTime(): Promise<Date | null> {
   const snapshot = await getDoc(doc(db, "notifications", auth.currentUser!.uid));
   const lastWatch = snapshot.data()?.lastWatch;
   if (lastWatch) {
-    return new Date(lastWatch * 1000);
+    return new Date(lastWatch.toDate());
   } else {
     return null;
   }
@@ -69,9 +76,9 @@ export async function getLastWatchTime(): Promise<Date | null> {
 
 export function subscribeLastWatchTime(observer: (date: Date | null) => void) {
   return onSnapshot(doc(db, "notifications", auth.currentUser!.uid), (snapshot) => {
-    const date = snapshot.data()?.lastWatch;
+    const date = snapshot.data({ serverTimestamps: "estimate" })?.lastWatch;
     if (date) {
-      observer(date);
+      observer(new Date(date.toDate()));
     } else {
       observer(null);
     }

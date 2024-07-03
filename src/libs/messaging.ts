@@ -24,6 +24,7 @@ async function getVapidKey(): Promise<string> {
 export async function getFCMToken(): Promise<string | null> {
   try {
     const vapidKey = await getVapidKey();
+    console.log("vapidKey", vapidKey);
     return await getToken(messaging, { vapidKey: vapidKey });
   } catch (e) {
     return null;

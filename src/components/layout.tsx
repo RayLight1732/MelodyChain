@@ -21,10 +21,14 @@ export function Header() {
   const router = useRouter();
 
   useEffect(() => {
-    return subscribeLastWatchTime(setLastWatchTime);
+    return subscribeLastWatchTime((date) => {
+      setLastWatchTime(date);
+      console.log("set last watch time", date);
+    });
   }, []);
 
   useEffect(() => {
+    console.log("lastWatchTime", lastWatchTime);
     if (lastWatchTime) {
       const newNotifications = notifications.filter((it) => it.date > lastWatchTime);
       setNewNotisCount(newNotifications.length);
@@ -43,7 +47,7 @@ export function Header() {
       >
         <img src="/images/logo_small.png" alt="" className="w-[60px] h-[60px]" />
       </div>
-      <div className="relative">
+      <div className="relative cursor-pointer">
         <img
           src="/images/bell.png"
           alt=""

@@ -3,7 +3,7 @@ import { ReactNode, createContext, useCallback, useContext, useEffect, useState 
 
 const fcmTokenContext = createContext({ token: "", permissionStatus: "", request: () => {} });
 
-export function FCMTokenContextProvider({ uid, children }: { uid: string; children: ReactNode }) {
+export function FCMTokenContextProvider({ children }: { children: ReactNode }) {
   const [token, setToken] = useState("");
   const [permissionStatus, setNotificationPermissionStatus] = useState(Notification.permission);
   const request = useCallback(() => {
@@ -14,14 +14,17 @@ export function FCMTokenContextProvider({ uid, children }: { uid: string; childr
     const retrieveToken = async () => {
       try {
         if (typeof window !== "undefined" && "serviceWorker" in navigator) {
+          console.log("permissionStatus", permissionStatus);
           if (permissionStatus === "granted") {
             const currentToken = await getFCMToken();
-            if (currentToken && !ignore) {
-              console.log("set token");
-              setToken(currentToken);
-              registerToken(currentToken);
-            } else {
-              console.log("No registration token available. Request permission to generate one.");
+            if (!ignore) {
+              if (currentToken) {
+                console.log("set token");
+                setToken(currentToken);
+                registerToken(currentToken);
+              } else {
+                console.log("No registration token available. Request permission to generate one.");
+              }
             }
           }
         }

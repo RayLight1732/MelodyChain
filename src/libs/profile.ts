@@ -18,7 +18,7 @@ export class DispatchedMusic {
     this.previousRefs = data.previousRefs;
     this.dataRef = data.dataRef;
     this.tempo = data.tempo;
-    this.limit = new Date(data.limit.seconds * 1000);
+    this.limit = data.limit.toDate();
   }
 
   getPart = () => this.part;
@@ -62,6 +62,7 @@ export class Profile {
           dispatchedMusic = new DispatchedMusic(data.dispatch);
         }
       }
+      //TODO dateの追加
       return new Profile(data.uid, data.name, data.favorite, data.part, new Date(data.date * 1000), dispatchedMusic);
     } else {
       return null;

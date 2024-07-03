@@ -13,7 +13,7 @@ export default function DataProvider({ uid, requireProfile, loadingComponent, ch
         <ProfileContextProvider uid={uid}>
           <ProfileImageContextProvider uid={uid}>
             <HeaderImageContextProvider uid={uid}>
-              <FCMTokenContextProvider uid={uid}>
+              <FCMTokenContextProvider>
                 <NotificationContextProvider>
                   <ProfileLoadObserver requireProfile={requireProfile} loadingComponent={loadingComponent}>
                     <div className="bg-primary flex flex-col w-screen max-w-[30rem] mx-auto h-[100dvh]">
