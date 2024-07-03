@@ -41,13 +41,13 @@ function isNew(notification: Notification, lastWatch: Date | null | undefined): 
 }
 
 function NotificationViewer({ notification, isNew }: { notification: Notification; isNew: boolean }) {
-  const rounter = useRouter();
+  const router = useRouter();
   return (
     <div
-      className="w-full border-secondary border border-x-0 border-t-0 px-6 py-3 hover:bg-hprimary cursor-pointer"
+      className="w-full border-secondary border border-x-0 border-t-0 px-6 py-3 hover:bg-hprimary cursor-pointer transition-colors duration-75"
       onClick={() => {
         if (notification.link) {
-          rounter.push(notification.link);
+          router.push(notification.link);
         }
       }}
     >
