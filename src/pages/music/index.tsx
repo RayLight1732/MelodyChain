@@ -29,8 +29,6 @@ export default function Dispatched(): ReactElement {
   } else if (dispatchedMusic.getState() === FetchStatus.SUCCESS) {
     const content = dispatchedMusic.getContent();
     if (content) {
-      console.log(content.getLimit());
-
       return (
         <>
           <div className="p-5">
@@ -45,9 +43,8 @@ export default function Dispatched(): ReactElement {
             <FileSelectButton selectedFile={selectedFile} setSelectedFile={setSelectedFile} isValidFile={!error} isValidating={isValidating}></FileSelectButton>
             <WarnMessage fileSelected={selectedFile != null} isValidFile={!error} isValidating={isValidating} tempo={content.getTempo()} duration={duration}></WarnMessage>
           </div>
-          {selectedFile != null && !error ? (
-            <WIPMusicPlayer newPart={content.getPart()} id={content.getDataRef()} authorIDs={content.getAuthorIds()} musicRefs={content.getPreviousRefs()} newMusicFile={selectedFile}></WIPMusicPlayer>
-          ) : null}
+          <WIPMusicPlayer newPart={content.getPart()} id={content.getDataRef()} authorIDs={content.getAuthorIds()} musicRefs={content.getPreviousRefs()} newMusicFile={selectedFile}></WIPMusicPlayer>
+
           {content.getPart() == 3 ? (
             <div className="m-4">
               <p>サムネイル</p>

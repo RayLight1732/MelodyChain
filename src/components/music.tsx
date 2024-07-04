@@ -6,6 +6,7 @@ import { useRouter } from "next/router";
 import { useGoodCounter, useGoodHistory, useInvolvedMusic, useMusicDetail, useThumbnailURL, useTrackURL, useTrackURLs, useUploadedMusic, useViewCounter } from "@/hooks/music";
 import { indexToPartName } from "@/libs/utils";
 import { useAudioManager } from "@/hooks/audioManager";
+import { useProfileImage, useProfileImageById } from "@/hooks/profile";
 
 export function JumpableMusicPreviewById({ musicId }: { musicId: string }) {
   const { data, isLoading } = useMusicDetail(musicId);
@@ -65,7 +66,7 @@ export function PlayableMusicPreview({ music }: { music: Music }) {
   );
 }
 //TODO error handling
-export function MusicPreview({ music }: { music: Music | null | undefined }) {
+export function MusicPreview({ music }: { music?: Music | null | undefined }) {
   const { data: src } = useThumbnailURL(music);
 
   const ImageComponent = () => {
@@ -124,20 +125,6 @@ export function MusicInfo({ music, className = "", inclementViewCount }: { music
 export function MusicPlayer({ music }: { music: Music }) {
   const size = music.musicRefs.length;
   const { data: urls } = useTrackURLs(music);
-  const [authorProfileImages, setAuthorProfileImages] = useState<Array<string | null>>([]);
-  useEffect(() => {
-    let ignore = false;
-    getAuthorProfileURLs(music)
-      .then((result) => {
-        setAuthorProfileImages(result);
-      })
-      .catch((e) => {
-        console.error(e);
-      });
-    return () => {
-      ignore = true;
-    };
-  }, [music]);
 
   const audioManager = useAudioManager(music.id, urls);
   return (
@@ -147,7 +134,6 @@ export function MusicPlayer({ music }: { music: Music }) {
         for (let i = 0; i < size; i++) {
           list.push(
             <TrackPlayer
-              imageSrc={authorProfileImages[i]}
               playing={audioManager?.isPlaying(i) ?? false}
               text={indexToPartName(i)}
               key={i}
@@ -168,7 +154,6 @@ export function TrackPlayer({
   onClick,
   playing,
   text,
-  imageSrc,
   noImage = false,
   isLoadEnded,
   authorUid,
@@ -177,12 +162,11 @@ export function TrackPlayer({
   playing: boolean;
   onClick: MouseEventHandler<any>;
   text: string;
-  imageSrc?: string | null;
   isLoadEnded: boolean;
   authorUid?: string | undefined;
 }) {
   const router = useRouter();
-
+  const { data: imageSrc } = useProfileImageById(authorUid);
   return (
     <li className="flex items-center m-4">
       {noImage ? (

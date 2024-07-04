@@ -1,7 +1,7 @@
 import { MusicInfo, MusicPlayer, MusicPreview } from "@/components/music";
 import { useMusicDetail } from "@/hooks/music";
 import { useRouter } from "next/router";
-import React from "react";
+import React, { useEffect } from "react";
 
 export default function MusicView() {
   const router = useRouter();
@@ -19,6 +19,10 @@ export default function MusicView() {
       </>
     );
   } else {
-    return null;
+    return (
+      <>
+        <MusicPreview />
+      </>
+    );
   }
 }

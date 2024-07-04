@@ -2,8 +2,9 @@ import { GoodHistory, InvolvedMusic, JumpableMusicPreview } from "@/components/m
 import { useMyHeaderImage, useMyProfile, useMyProfileImage, useMyUid } from "@/components/profile";
 import { Panel } from "@/components/utlis";
 import { useGoodHistory } from "@/hooks/music";
+import { useHeaderImage, useProfile, useProfileImage } from "@/hooks/profile";
 import { Music, getInvolvedMusic } from "@/libs/music";
-import { Profile, useHeaderImage, useProfile, useProfileImage } from "@/libs/profile";
+import { Profile } from "@/libs/profile";
 import { indexToPartName, numPartToBoolPart } from "@/libs/utils";
 import Head from "next/head";
 import { useRouter } from "next/router";
