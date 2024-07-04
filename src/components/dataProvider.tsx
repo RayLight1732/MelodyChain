@@ -5,6 +5,8 @@ import { ReactNode, useEffect, useRef, useState } from "react";
 import { AudioContextProvider } from "@/hooks/context";
 import { ScrollHostoryContextProvider } from "@/hooks/scroll";
 import { MusicCacheMapContextProvider } from "@/hooks/music";
+import { FCMTokenContextProvider } from "@/hooks/fcmToken";
+import { NotificationContextProvider } from "@/hooks/notificationProvider";
 
 export default function DataProvider({ uid, requireProfile, loadingComponent, children }: { uid: string; requireProfile: boolean; loadingComponent: ReactNode; children: ReactNode }) {
   const scrollOriginRef = useRef<HTMLDivElement | null>(null);
@@ -17,13 +19,19 @@ export default function DataProvider({ uid, requireProfile, loadingComponent, ch
               <MusicCacheMapContextProvider>
                 <ScrollHostoryContextProvider scrollOriginRef={scrollOriginRef}>
                   <ProfileLoadObserver requireProfile={requireProfile} loadingComponent={loadingComponent}>
-                    <div className="flex flex-col w-screen max-w-[30rem] mx-auto h-[100dvh]">
-                      <Header></Header>
-                      <div className="flex-grow overflow-y-auto w-screen max-w-[30rem]" id="container" ref={scrollOriginRef}>
-                        {children}
-                      </div>
-                      <Footer></Footer>
-                    </div>
+                    <FCMTokenContextProvider>
+                      <NotificationContextProvider>
+                        <ProfileLoadObserver requireProfile={requireProfile} loadingComponent={loadingComponent}>
+                          <div className="bg-primary flex flex-col w-screen max-w-[30rem] mx-auto h-[100dvh]">
+                            <Header></Header>
+                            <div className="flex-grow overflow-y-auto w-screen max-w-[30rem]" id="container">
+                              {children}
+                            </div>
+                            <Footer></Footer>
+                          </div>
+                        </ProfileLoadObserver>
+                      </NotificationContextProvider>
+                    </FCMTokenContextProvider>
                   </ProfileLoadObserver>
                 </ScrollHostoryContextProvider>
               </MusicCacheMapContextProvider>
@@ -35,6 +43,12 @@ export default function DataProvider({ uid, requireProfile, loadingComponent, ch
   );
 }
 
+/**
+ * 自分のプロフィールが読み込まれているかを監視する
+ * 読み込まれていなかった場合、ローディング画面を表示する
+ * @param param0
+ * @returns
+ */
 function ProfileLoadObserver({ requireProfile, loadingComponent, children }: { requireProfile: boolean; loadingComponent: ReactNode; children: ReactNode }) {
   const [myProfile] = useMyProfile();
   const [myProfileImage] = useMyProfileImage();

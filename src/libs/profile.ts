@@ -18,7 +18,7 @@ export class DispatchedMusic {
     this.previousRefs = data.previousRefs;
     this.dataRef = data.dataRef;
     this.tempo = data.tempo;
-    this.limit = new Date(data.limit.seconds * 1000);
+    this.limit = data.limit.toDate();
   }
 
   getPart = () => this.part;
@@ -36,6 +36,7 @@ export class DispatchedMusic {
 export class Profile {
   name: string;
   private uid: string;
+  private date: Date;
   favorite: string;
   part: Array<number>;
   private dispatchedMusic: DispatchedMusic | null;
@@ -46,6 +47,7 @@ export class Profile {
     this.favorite = favorite;
     this.part = part;
     this.dispatchedMusic = dispatchedMusic;
+    this.date = date;
   }
 
   getUid = () => this.uid;
@@ -62,7 +64,7 @@ export class Profile {
           dispatchedMusic = new DispatchedMusic(data.dispatch);
         }
       }
-      return new Profile(data.uid, data.name, data.favorite, data.part, data.date, dispatchedMusic);
+      return new Profile(data.uid, data.name, data.favorite, data.part, data.created_date.toDate(), dispatchedMusic);
     } else {
       return null;
     }
@@ -123,9 +125,10 @@ export async function uploadProfile(name: string, favorite: string, part: number
       name: name,
       favorite: favorite,
       part: part,
+      created_date: serverTimestamp(),
       dispatch: {
         state: "init",
-        limit: serverTimestamp(),
+        last: serverTimestamp(),
       },
     });
   }
@@ -174,22 +177,4 @@ export function onProfileUpdated(uid: string, observer: (profile: Profile | null
       }
     }
   );
-}
-
-export function useProfile(uid: string) {
-  return useSWR(`user/${uid}/profile`, async (arg: string) => {
-    return await getProfile(uid);
-  });
-}
-
-export function useProfileImage(profile: Profile) {
-  return useSWR(`user/${profile.getUid()}/profile/image`, async (arg: string) => {
-    return await getProfileImageUrlById(profile.getUid());
-  });
-}
-
-export function useHeaderImage(profile: Profile) {
-  return useSWR(`user/${profile.getUid()}/profile/header`, async (arg: string) => {
-    return await getHeaderImageUrlById(profile.getUid());
-  });
 }

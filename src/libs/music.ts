@@ -1,4 +1,21 @@
-import { DocumentSnapshot, collection, doc, getDoc, getDocs, where, limit as funcLimit, startAfter as funcStartAfter, QuerySnapshot, setDoc, DocumentData, query, orderBy } from "firebase/firestore";
+import {
+  DocumentSnapshot,
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  where,
+  limit as funcLimit,
+  startAfter as funcStartAfter,
+  QuerySnapshot,
+  setDoc,
+  DocumentData,
+  query,
+  orderBy,
+  updateDoc,
+  serverTimestamp,
+} from "firebase/firestore";
+
 import { auth, db, rdb, storage } from "./initialize";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import {
@@ -17,9 +34,9 @@ import {
   query as rdbQuery,
   ref as rdbRef,
   remove,
-  serverTimestamp,
   set,
   update,
+  serverTimestamp as rdbServerTimestamp,
 } from "firebase/database";
 import { getProfileImageUrlById } from "./profile";
 
@@ -42,7 +59,7 @@ export class Music {
 
   static getInstance(snapshot: DocumentSnapshot) {
     const data = snapshot.data()!;
-    return new Music(data.id, data.name, data.thumbnailRef, data.authorIDs, data.musicRefs, data.date);
+    return new Music(data.id, data.name, data.thumbnailRef, data.authorIDs, data.musicRefs, data.date.toDate());
   }
 }
 
@@ -184,7 +201,8 @@ export async function uploadMusic(musicFile: Blob, name: string | null = null, t
   const promise = uploadBytes(storageRef, musicFile);
   promiseList.push(promise);
 
-  await Promise.allSettled(promiseList);
+  await Promise.all(promiseList);
+  await updateDoc(doc(db, "users", auth.currentUser!.uid), { uploaded: true });
 }
 
 export async function getAuthorProfileURLs(music: Music) {
@@ -194,7 +212,7 @@ export async function getAuthorProfileURLs(music: Music) {
     const promise = getProfileImageUrlById(value).then((url) => (result[index] = url));
     promiseList.push(promise);
   });
-  await Promise.allSettled(promiseList);
+  await Promise.all(promiseList);
   return result;
 }
 
@@ -257,7 +275,7 @@ export function setGoodPressed(music: Music, uid: string, pressed: boolean) {
   if (pressed) {
     updates[flagRef] = true;
     updates[musicGoodCounterRef] = increment(1);
-    updates[userSideGoodTimestampRef] = serverTimestamp();
+    updates[userSideGoodTimestampRef] = rdbServerTimestamp();
   } else {
     updates[flagRef] = null;
     updates[musicGoodCounterRef] = increment(-1);

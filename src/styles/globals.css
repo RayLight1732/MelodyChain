@@ -2,6 +2,35 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  :root {
+    --primary: #ffffff;
+    --hprimary: #f3f5f6;
+    --accent: #777777;
+    --secondary: #dddddd;
+    --hsecondary: #bbbbbb;
+    --foreground: #000000;
+    --warn: #f4212f;
+  }
+
+  .dark {
+    --primary: #1f1f1f;
+    --hprimary: #f3f5f6;
+    --accent: #777777;
+    --secondary: #555555;
+    --hsecondary: #606060;
+    --foreground: #e8eaed;
+    --warn: #f4212f;
+  }
+}
+
+@layer base {
+  body {
+    @apply text-foreground bg-primary;
+  }
+}
+
 body {
   font-family: Arial, sans-serif;
+  //scrollbar-color: #1f1f1f #777777;
 }

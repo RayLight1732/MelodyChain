@@ -3,10 +3,11 @@ import { MouseEventHandler, useEffect, useMemo, useRef, useState } from "react";
 
 import { InfiniteScrollViewer, PlayButton, SpinningLoader } from "./utlis";
 import { useRouter } from "next/router";
-import { useGoodCounter, useGoodHistory, useInvolvedMusic, useMusicDetail, useThumbnailURL, useTrackURLs, useUploadedMusic, useViewCounter } from "@/hooks/music";
+import { useGoodCounter, useGoodHistory, useInvolvedMusic, useMusicDetail, useThumbnailURL, useTrackURL, useTrackURLs, useUploadedMusic, useViewCounter } from "@/hooks/music";
 import { indexToPartName } from "@/libs/utils";
 import { useAudioManager } from "@/hooks/audioManager";
 import { useScrollHistory } from "@/hooks/scroll";
+import { useProfileImage, useProfileImageById } from "@/hooks/profile";
 
 export function JumpableMusicPreviewById({ musicId }: { musicId: string }) {
   const { data, isLoading } = useMusicDetail(musicId);
@@ -23,25 +24,61 @@ export function JumpableMusicPreview({ music }: { music: Music | null | undefine
           router.push(`/music/${music.id}`);
         }
       }}
-      className="cursor-pointer hover:bg-gray-100 p-1 rounded-md"
+      className="cursor-pointer hover:bg-secondary p-1 rounded-md"
     >
       <MusicPreview music={music}></MusicPreview>
     </div>
   );
 }
+
+export function PlayableMusicPreview({ music }: { music: Music }) {
+  const { data: urls } = useTrackURLs(music);
+  const audioManager = useAudioManager(music.id, urls);
+  const [inclementViewCount, setInclementViewCount] = useState(false);
+  const router = useRouter();
+  useEffect(() => {
+    setInclementViewCount((value) => value || (audioManager?.isPlaying(4) ?? false));
+  }, [audioManager?.isPlaying(4) ?? false]);
+  return (
+    <>
+      <div
+        onClick={(e) => {
+          if (music) {
+            router.push(`/music/${music.id}`);
+          }
+        }}
+        className="cursor-pointer hover:bg-hprimary p-1 rounded-md"
+      >
+        <MusicPreview music={music}></MusicPreview>
+        <MusicInfo music={music} inclementViewCount={inclementViewCount}></MusicInfo>
+        <TrackPlayer
+          playing={audioManager?.isPlaying(4) ?? false}
+          text="全て再生"
+          key={100}
+          onClick={(e) => {
+            e.stopPropagation();
+            audioManager?.togglePlayPoseAll();
+          }}
+          noImage={true}
+          isLoadEnded={true}
+        ></TrackPlayer>
+      </div>
+    </>
+  );
+}
 //TODO error handling
-export function MusicPreview({ music }: { music: Music | null | undefined }) {
+export function MusicPreview({ music }: { music?: Music | null | undefined }) {
   const { data: src } = useThumbnailURL(music);
 
   const ImageComponent = () => {
     if (src == null) {
       return (
         <>
-          <div className="w-full aspect-[4/3] object-cover bg-gray-400"></div>
+          <div className="w-full aspect-[4/3] object-cover bg-gray-400 rounded-md"></div>
         </>
       );
     } else {
-      return <img src={src} className="w-full aspect-[4/3] object-cover"></img>;
+      return <img src={src} className="w-full aspect-[4/3] object-cover rounded-md"></img>;
     }
   };
 
@@ -64,7 +101,8 @@ export function MusicInfo({ music, className = "", inclementViewCount }: { music
     <div className={"w-full flex justify-between px-4 " + className}>
       <p className="bg-secondary rounded-full px-4 py-2">{fmt.format(viewCount)}回試聴</p>
       <div
-        onClick={() => {
+        onClick={(e) => {
+          e.stopPropagation();
           setPressed(!isPressed);
         }}
         onMouseDown={() => {
@@ -88,20 +126,6 @@ export function MusicInfo({ music, className = "", inclementViewCount }: { music
 export function MusicPlayer({ music }: { music: Music }) {
   const size = music.musicRefs.length;
   const { data: urls } = useTrackURLs(music);
-  const [authorProfileImages, setAuthorProfileImages] = useState<Array<string | null>>([]);
-  useEffect(() => {
-    let ignore = false;
-    getAuthorProfileURLs(music)
-      .then((result) => {
-        setAuthorProfileImages(result);
-      })
-      .catch((e) => {
-        console.error(e);
-      });
-    return () => {
-      ignore = true;
-    };
-  }, [music]);
 
   const audioManager = useAudioManager(music.id, urls);
   return (
@@ -111,7 +135,6 @@ export function MusicPlayer({ music }: { music: Music }) {
         for (let i = 0; i < size; i++) {
           list.push(
             <TrackPlayer
-              imageSrc={authorProfileImages[i]}
               playing={audioManager?.isPlaying(i) ?? false}
               text={indexToPartName(i)}
               key={i}
@@ -132,7 +155,6 @@ export function TrackPlayer({
   onClick,
   playing,
   text,
-  imageSrc,
   noImage = false,
   isLoadEnded,
   authorUid,
@@ -141,12 +163,11 @@ export function TrackPlayer({
   playing: boolean;
   onClick: MouseEventHandler<any>;
   text: string;
-  imageSrc?: string | null;
   isLoadEnded: boolean;
   authorUid?: string | undefined;
 }) {
   const router = useRouter();
-
+  const { data: imageSrc } = useProfileImageById(authorUid);
   return (
     <li className="flex items-center m-4">
       {noImage ? (
@@ -227,7 +248,7 @@ export function UploadedMusic() {
     <InfiniteScrollViewer
       loadNext={loadNext}
       loaded={history.map((it) => (
-        <JumpableMusicPreview music={it} key={it.id}></JumpableMusicPreview>
+        <PlayableMusicPreview music={it} key={it.id}></PlayableMusicPreview>
       ))}
     ></InfiniteScrollViewer>
   );

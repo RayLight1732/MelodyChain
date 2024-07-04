@@ -1,6 +1,6 @@
 export function Loading() {
   return (
-    <div className="flex justify-center align-middle bg-white">
+    <div className="flex justify-center align-middle bg-primary">
       <div className="w-screen max-w-[30rem] h-screen relative">
         <img src="/images/logo.png" alt="ロゴ" className="w-full" />
         <div

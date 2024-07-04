@@ -1,7 +1,10 @@
 import { AuthStateManager } from "@/components/layout";
+import { firebaseApp } from "@/libs/initialize";
 import "@/styles/globals.css";
+import { getMessaging, onMessage } from "firebase/messaging";
 import type { AppProps } from "next/app";
 import Head from "next/head";
+import { useEffect, useState } from "react";
 
 interface MyAppProps {
   Component: {

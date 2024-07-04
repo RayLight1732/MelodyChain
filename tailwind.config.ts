@@ -10,12 +10,17 @@ const config: Config = {
       ...theme("colors"),
     }),
     extend: {
+      backgroundImage: {
+        google: "url('https://developers.google.com/identity/images/g-logo.png?hl=ja')",
+      },
       colors: {
-        primary: "#ffffff",
-        accent: "#777777",
-        secondary: "#dddddd",
-        hsecondary: "#bbbbbb",
-        warn: "#f4212f",
+        primary: "var(--primary)",
+        hprimary: "var(--hprimary)",
+        accent: "var(--accent)",
+        secondary: "var(--secondary)",
+        hsecondary: "var(--hsecondary)",
+        warn: "var(--warn)",
+        foreground: "var(--foreground)",
       },
       keyframes: {
         "wave-animation": {
@@ -65,5 +70,6 @@ const config: Config = {
       );
     }),
   ],
+  darkMode: "class",
 };
 export default config;

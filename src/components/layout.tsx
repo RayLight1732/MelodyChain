@@ -1,29 +1,100 @@
-import { onAuthStateChanged } from "@/libs/auth";
-import React, { ReactNode, useEffect, useMemo, useState } from "react";
+import { onAuthStateChanged, signOut } from "@/libs/auth";
+import React, { Dispatch, ReactNode, SetStateAction, useEffect, useMemo, useState } from "react";
 import Login from "./login";
 import { Loading } from "./loading";
 import Link from "next/link";
 import { auth } from "@/libs/initialize";
-import { useMyProfileImage } from "./profile";
+import { useMyProfile, useMyProfileImage } from "./profile";
 import dynamic from "next/dynamic";
+import { Profile } from "@/libs/profile";
+import { useNotifications } from "@/hooks/notificationProvider";
+import { subscribeLastWatchTime } from "@/libs/notification";
+import { useRouter } from "next/router";
 
 export function Header() {
+  const [profile] = useMyProfile();
+  const [isSidebarOpen, setSidebarOpen] = useState(false);
+  const notifications = useNotifications();
+  const [newNotisCount, setNewNotisCount] = useState(0);
+  const [lastWatchTime, setLastWatchTime] = useState<Date | null | undefined>();
+
+  const router = useRouter();
+
+  useEffect(() => {
+    return subscribeLastWatchTime((date) => {
+      setLastWatchTime(date);
+      console.log("set last watch time", date);
+    });
+  }, []);
+
+  useEffect(() => {
+    console.log("lastWatchTime", lastWatchTime);
+    if (lastWatchTime) {
+      const newNotifications = notifications.filter((it) => it.date > lastWatchTime);
+      setNewNotisCount(newNotifications.length);
+    } else if (lastWatchTime === null) {
+      setNewNotisCount(notifications.length);
+    }
+  }, [lastWatchTime, notifications]);
+
   return (
-    <header className="flex justify-between items-center px-5 py-2.5 border-b-2 divide-solid border-accent bg-white z-40">
-      <div className="logo left-logo">
+    <header className="flex justify-between items-center px-5 py-2.5 border-b-2 divide-solid border-accent bg-primary z-50">
+      <div
+        className="cursor-pointer"
+        onClick={() => {
+          setSidebarOpen(true);
+        }}
+      >
         <img src="/images/logo_small.png" alt="" className="w-[60px] h-[60px]" />
       </div>
-      <div className="logo right-logo">
-        <img src="/images/bell.png" alt="" />
+      <div className="relative cursor-pointer">
+        <img
+          src="/images/bell.png"
+          alt=""
+          onClick={() => {
+            router.push("/notification");
+          }}
+        />
+        {newNotisCount != 0 ? (
+          <div className="outline outline-2 outline-primary bg-[#ef5350] rounded-full absolute bottom-0 right-0 w-5 h-5 flex items-center justify-center transform translate-x-1/2 translate-y-1/2 ">
+            <p className="text-sm text-primary">{newNotisCount}</p>
+          </div>
+        ) : null}
       </div>
+      <Sidebar setSidebarOpen={setSidebarOpen} isSidebarOpen={isSidebarOpen} profile={profile.getContent()}></Sidebar>
     </header>
+  );
+}
+
+function Sidebar({ setSidebarOpen, isSidebarOpen, profile }: { profile: Profile | null; isSidebarOpen: boolean; setSidebarOpen: Dispatch<SetStateAction<boolean>> }) {
+  return (
+    <div
+      className={`top-0 left-0 h-full w-full absolute bg-black/40 z-50 transition-opacity duration-300 ${isSidebarOpen ? "opacity-100" : "opacity-0 pointer-events-none"}`}
+      onClick={() => {
+        setSidebarOpen(false);
+      }}
+    >
+      <div className={`h-full bg-primary transition-transform duration-300 transform ${isSidebarOpen ? "translate-x-0 w-48" : "-translate-x-full w-0"}`}>
+        <div className="px-1 py-2.5 space-y-3">
+          <p className="mx-5 text-xl font-semibold">{profile?.name}</p>
+          <button
+            className="font-semibold hover:bg-hsecondary w-full text-left px-6 py-1 rounded-md"
+            onClick={() => {
+              signOut();
+            }}
+          >
+            ログアウト
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
 
 export function Footer() {
   const profileURL: string = useMyProfileImage()[0].getContent() ?? "/images/tmp-profile.png";
   return (
-    <footer className="grid grid-cols-3 px-5 py-2.5 border-t-2 divide-solid border-accent bg-white z-40">
+    <footer className="grid grid-cols-3 px-5 py-2.5 border-t-2 divide-solid border-accent bg-primary z-40">
       <div>
         <Link href="/top" className="text-center flex justify-center h-full">
           <img src="/images/home.svg" className="w-[35px] h-[35px] m-auto block" alt="top" />

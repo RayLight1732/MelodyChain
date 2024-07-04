@@ -1,23 +1,10 @@
-import {
-  GoogleAuthProvider,
-  Unsubscribe,
-  signOut as fbSignOut,
-  signInWithRedirect,
-} from "firebase/auth";
+import { GoogleAuthProvider, Unsubscribe, signOut as fbSignOut, signInWithPopup, signInWithRedirect } from "firebase/auth";
 import { auth, db } from "./initialize";
-import {
-  CollectionReference,
-  collection,
-  deleteDoc,
-  doc,
-  onSnapshot,
-  serverTimestamp,
-  setDoc,
-} from "firebase/firestore";
+import { CollectionReference, collection, deleteDoc, doc, onSnapshot, serverTimestamp, setDoc } from "firebase/firestore";
 import { getToken } from "firebase/messaging";
+import { getFCMToken, unregisterToken } from "./messaging";
 
-const vapidKey =
-  "BPsx8odGYwd3o7Crq-ekf29o9PoLn3SJ30fBgqS3Q76jkFjcptMseaAVIripyTmHo8yUQAc1Z2UxbgrlzRrEtRY";
+const vapidKey = "BPsx8odGYwd3o7Crq-ekf29o9PoLn3SJ30fBgqS3Q76jkFjcptMseaAVIripyTmHo8yUQAc1Z2UxbgrlzRrEtRY";
 
 function getUserTokenCollection(uid: string): CollectionReference {
   return collection(db, "users", uid, "token");
@@ -28,10 +15,7 @@ function getUserTokenCollection(uid: string): CollectionReference {
  * @param {} onAuthenticated ログインが完了している際に呼び出されるコールバック
  * @param {} onNotAuthenticated ログインが完了していない際に呼び出されるコールバック
  */
-export function onAuthStateChanged(
-  onAuthenticated: () => void,
-  onNotAuthenticated: () => void
-): Unsubscribe {
+export function onAuthStateChanged(onAuthenticated: () => void, onNotAuthenticated: () => void): Unsubscribe {
   return auth.onAuthStateChanged((user) => {
     if (!user) {
       onNotAuthenticated();
@@ -43,46 +27,26 @@ export function onAuthStateChanged(
 
 /**
  * サインアウトを行う
- * @throws サインアウトに失敗した場合、エラーが発生する
+ * @returns サインアウトが正常に行われたかどうか
  */
-export async function signOut() {
+export async function signOut(): Promise<boolean> {
   const currentUser = auth.currentUser;
-  if (currentUser) {
-    const promise1 = fbSignOut(auth);
-    /*
-    const token = await getToken(messaging, {
-      vapidKey: vapidKey,
-    });*/
-    const token = null;
-    if (token) {
-      const promise2 = deleteDoc(
-        doc(getUserTokenCollection(currentUser.uid), token)
-      );
-      await Promise.allSettled([promise1, promise2]);
-    }
-  }
-}
-
-/**
- * トークンを登録する
- */
-export async function registerToken() {
-  const currentUser = auth.currentUser;
-  if (currentUser) {
-    console.log("registor token");
-    /*
-    const token = await getToken(messaging, {
-      vapidKey: vapidKey,
-    });*/
-    const token = null;
-    if (token) {
-      setDoc(doc(getUserTokenCollection(currentUser.uid), token), {
-        token: token,
-        timestamp: serverTimestamp(),
-      });
+  try {
+    if (currentUser) {
+      const token = await getFCMToken();
+      const promises = [];
+      promises.push(fbSignOut(auth));
+      if (token) {
+        promises.push(unregisterToken(token));
+      }
+      await Promise.allSettled(promises);
+      return true;
     } else {
-      //Show permission request
+      return false;
     }
+  } catch (e) {
+    console.error(e);
+    return false;
   }
 }
 
@@ -93,5 +57,9 @@ provider.setCustomParameters({
 
 export function loginWithGoogle() {
   console.log("login");
-  signInWithRedirect(auth, provider);
+  if (process.env.NODE_ENV == "development") {
+    signInWithPopup(auth, provider);
+  } else {
+    signInWithRedirect(auth, provider);
+  }
 }
