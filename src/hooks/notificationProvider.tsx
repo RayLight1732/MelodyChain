@@ -54,6 +54,7 @@ export function useComposedNotification(): [boolean, (sendNotification: boolean)
     bValue,
     (sendNotification: boolean) => {
       setValue(sendNotification);
+      console.log("update");
       localStorage.setItem("ComposedNotification", sendNotification.toString());
     },
   ];

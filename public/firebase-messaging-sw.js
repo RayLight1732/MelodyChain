@@ -14,6 +14,9 @@ const firebaseConfig = {
   appId: "1:826270602514:web:f54ce41f6ab7538fe08fcb",
 };
 
+var dispatchNotification = true;
+var composedNotification = true;
+
 firebase.initializeApp(firebaseConfig);
 
 const messaging = firebase.messaging();
@@ -25,28 +28,13 @@ messaging.onBackgroundMessage((payload) => {
   const { title, body, image, icon, type, ...restPayload } = payload.data;
   const notificationOptions = {
     body,
-    icon: image || "/icons/firebase-logo.png", // path to your "fallback" firebase notification logo
+    icon: image || "/icon-256x256.png", // path to your "fallback" firebase notification logo
     data: restPayload,
   };
-  var key = null;
-  if (type == 0) {
-    key = "DispatchNotification";
-  } else if (type == 1) {
-    key = "ComposedNotification";
-  }
-  if (key) {
-    var value = localStorage.getItem(key);
-    var bValue = true;
-    if (value == "true") {
-      bValue = true;
-    } else if (value == "false") {
-      bValue = false;
-    } else {
-      bValue = true;
-    }
-    if (!value) {
-      return;
-    }
+  if (type == 0 && !dispatchNotification) {
+    return;
+  } else if (type == 1 && !composedNotification) {
+    return;
   }
   return self.registration.showNotification(title, notificationOptions);
 });

@@ -83,14 +83,15 @@ function Sidebar({ setSidebarOpen, isSidebarOpen, profile }: { profile: Profile 
       <div className={`h-full bg-primary transition-transform duration-300 transform ${isSidebarOpen ? "translate-x-0 w-48" : "-translate-x-full w-0"}`}>
         <div className="px-1 py-2.5 space-y-3">
           <p className="mx-5 text-xl font-semibold">{profile?.name}</p>
-          <button
+
+          {/* <button
             className="font-semibold hover:bg-hsecondary w-full text-left px-6 py-1 rounded-md"
             onClick={() => {
               rounter.push("/settings");
             }}
           >
             設定
-          </button>
+          </button> */}
           <button
             className="font-semibold hover:bg-hsecondary w-full text-left px-6 py-1 rounded-md"
             onClick={() => {
