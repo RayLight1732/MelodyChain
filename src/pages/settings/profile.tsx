@@ -134,6 +134,7 @@ export default function ProfileEditor() {
   );
 }
 ProfileEditor.requireProfile = true;
+ProfileEditor.showBackButton = true;
 
 function PartSelector({ defaultValue = [], allPartState, setAllPartState }: { defaultValue?: Array<number>; allPartState: Array<number>; setAllPartState: Dispatch<SetStateAction<Array<number>>> }) {
   useEffect(() => {

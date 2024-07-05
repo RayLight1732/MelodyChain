@@ -35,6 +35,8 @@ export default function ProfileView() {
   }
 }
 
+ProfileView.showBackButton = true;
+
 function MyProfileView() {
   const [profile, setProfile] = useMyProfile();
   const [profileImage, setProfileImage] = useMyProfileImage();

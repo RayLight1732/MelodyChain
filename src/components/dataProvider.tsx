@@ -6,7 +6,19 @@ import { AudioContextProvider } from "@/hooks/context";
 import { FCMTokenContextProvider } from "@/hooks/fcmToken";
 import { NotificationContextProvider } from "@/hooks/notificationProvider";
 
-export default function DataProvider({ uid, requireProfile, loadingComponent, children }: { uid: string; requireProfile: boolean; loadingComponent: ReactNode; children: ReactNode }) {
+export default function DataProvider({
+  uid,
+  requireProfile,
+  loadingComponent,
+  children,
+  showBackButton = false,
+}: {
+  uid: string;
+  requireProfile: boolean;
+  loadingComponent: ReactNode;
+  children: ReactNode;
+  showBackButton?: boolean;
+}) {
   return (
     <AudioContextProvider>
       <UidContextProvider uid={uid}>
@@ -17,7 +29,7 @@ export default function DataProvider({ uid, requireProfile, loadingComponent, ch
                 <NotificationContextProvider>
                   <ProfileLoadObserver requireProfile={requireProfile} loadingComponent={loadingComponent}>
                     <div className="bg-primary flex flex-col w-screen max-w-[30rem] mx-auto h-[100dvh]">
-                      <Header></Header>
+                      <Header showBackButton={showBackButton}></Header>
                       <div className="flex-grow overflow-y-auto w-screen max-w-[30rem]" id="container">
                         {children}
                       </div>

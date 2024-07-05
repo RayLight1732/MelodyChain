@@ -12,6 +12,7 @@ const config: Config = {
     extend: {
       backgroundImage: {
         google: "url('https://developers.google.com/identity/images/g-logo.png?hl=ja')",
+        back: "url('/images/back.svg')",
       },
       colors: {
         primary: "var(--primary)",

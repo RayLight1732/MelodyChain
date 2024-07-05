@@ -11,6 +11,7 @@ interface MyAppProps {
     onAuthenticated: () => void;
     onNotAuthenticated: () => void;
     requireProfile: boolean;
+    showBackButton: boolean;
   };
 }
 
@@ -21,7 +22,12 @@ export default function App({ Component, pageProps }: AppProps & MyAppProps) {
         <meta charSet="UTF-8" name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>MolodyChain</title>
       </Head>
-      <AuthStateManager requireProfile={Component.requireProfile} onAuthenticated={Component.onAuthenticated} onNotAuthenticated={Component.onNotAuthenticated}>
+      <AuthStateManager
+        showBackButton={Component.showBackButton}
+        requireProfile={Component.requireProfile}
+        onAuthenticated={Component.onAuthenticated}
+        onNotAuthenticated={Component.onNotAuthenticated}
+      >
         <Component {...pageProps} />
       </AuthStateManager>
     </>

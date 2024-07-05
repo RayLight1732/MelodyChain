@@ -22,12 +22,32 @@ messaging.onBackgroundMessage((payload) => {
   console.log("on background message");
   // console.log('[firebase-messaging-sw.js] Received background message ', payload);
 
-  const { title, body, image, icon, ...restPayload } = payload.data;
+  const { title, body, image, icon, type, ...restPayload } = payload.data;
   const notificationOptions = {
     body,
     icon: image || "/icons/firebase-logo.png", // path to your "fallback" firebase notification logo
     data: restPayload,
   };
+  var key = null;
+  if (type == 0) {
+    key = "DispatchNotification";
+  } else if (type == 1) {
+    key = "ComposedNotification";
+  }
+  if (key) {
+    var value = localStorage.getItem(key);
+    var bValue = true;
+    if (value == "true") {
+      bValue = true;
+    } else if (value == "false") {
+      bValue = false;
+    } else {
+      bValue = true;
+    }
+    if (!value) {
+      return;
+    }
+  }
   return self.registration.showNotification(title, notificationOptions);
 });
 
