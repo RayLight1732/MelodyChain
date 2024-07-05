@@ -3,7 +3,9 @@ import useSWR from "swr";
 import { useAudioContext } from "./context";
 
 //part:0 ドラム 1ベース 2ギター 3メロディー 4全部
-class AudioManager {
+
+//TODO 型情報のみを取り出す
+export class AudioManager {
   private audioStateList: Array<AudioState>;
   private audioCtx: AudioContext;
   private offset = 0;
@@ -18,9 +20,10 @@ class AudioManager {
     this.getAudioState = this.getAudioState.bind(this);
     this.isPlaying = this.isPlaying.bind(this);
     this.updateState = this.updateState.bind(this);
-    this.togglePlayPose = this.togglePlayPose.bind(this);
-    this.togglePlayPoseAll = this.togglePlayPoseAll.bind(this);
+    this.setPlay = this.setPlay.bind(this);
+    this.setPlayAll = this.setPlayAll.bind(this);
     this.onEnd = this.onEnd.bind(this);
+    this.isPlayingAll = this.isPlayingAll.bind(this);
   }
 
   private getAudioState(part: number): AudioState | null {
@@ -44,22 +47,26 @@ class AudioManager {
     });
   }
 
-  togglePlayPose(part: number) {
-    if (this.isPlaying(4)) {
-      const currentPlaying = this.audioStateList.filter((v) => v.part != part && v.hasAudio() && v.isPlaying());
+  isPlayingAll(): boolean {
+    return this.isPlaying(4);
+  }
 
-      if (currentPlaying.length == 0) {
-        this.togglePlayPoseAll();
+  setPlay(part: number, play: boolean) {
+    if (this.isPlayingAll()) {
+      const otherPlaying = this.audioStateList.filter((v) => v.part != part && v.hasAudio() && v.isPlaying());
+
+      if (!play && otherPlaying.length == 0) {
+        this.setPlayAll(false);
       } else {
         const target = this.getAudioState(part);
         if (target) {
-          this.updateState(part, !target.isPlaying(), true, false);
+          this.updateState(part, play, true, false);
         }
       }
     } else {
       this.audioStateList.forEach((v) => {
         if (v.part == part) {
-          v.setPlaying(!v.isPlaying(), false, false, this.audioCtx);
+          v.setPlaying(play, false, false, this.audioCtx);
         } else if (v.part != 4) {
           v.setPlaying(false, false, false, this.audioCtx);
         }
@@ -68,16 +75,14 @@ class AudioManager {
     }
   }
 
-  togglePlayPoseAll() {
-    this.offset = -1;
-    const isPlayingAll = this.isPlaying(4);
-    if (isPlayingAll) {
-      //全て再生ボタンが押されている場合
+  setPlayAll(play: boolean) {
+    console.log("set play all:", play);
+    if (!play) {
       this.audioStateList.forEach((v) => {
         v.setPlaying(false, false, false, this.audioCtx);
       });
     } else {
-      //全て再生ボタンが押されていない場合
+      this.offset = -1;
       this.audioStateList.forEach((v) => {
         if (v.part != 4 && this.offset === -1) {
           this.offset = v.setPlaying(true, true, true, this.audioCtx);
@@ -92,7 +97,7 @@ class AudioManager {
     if (this.isPlaying(4)) {
       const playing = this.audioStateList.filter((v) => v.part != 4 && v.part != part).filter((v) => v.isPlaying());
       if (playing.length === 0) {
-        this.togglePlayPoseAll();
+        this.setPlayAll(false);
       } else {
         this.updateState(part, false, false, false);
       }
@@ -102,11 +107,7 @@ class AudioManager {
   }
 
   isLoadEnded(part: number): boolean {
-    if (part == 4) {
-      return true;
-    } else {
-      return this.getAudioState(part)?.isLoadEnded() ?? false;
-    }
+    return this.getAudioState(part)?.isLoadEnded() ?? false;
   }
 }
 
@@ -180,6 +181,8 @@ class AudioState {
           this.updateState(this.playing);
         }
       }
+    } else {
+      this.updateState(this.playing);
     }
     return currentTime;
   };
@@ -219,13 +222,12 @@ function useAudioState(part: number, url: string | null | undefined, audioCtx: A
   const [isPlaying, setPlaying] = useState(false);
   const [audioState, setAudioState] = useState<AudioState | null>(null);
   useEffect(() => {
-    const audioState = new AudioState(part, isLoading || !data, (playing) => setPlaying(playing), data);
+    const audioState = url ? new AudioState(part, isLoading || !data, (playing) => setPlaying(playing), data) : null;
     setAudioState(audioState);
     return () => {
-      audioState.setPlaying(false, false, false);
+      audioState?.setPlaying(false, false, false);
       setPlaying(false);
       setAudioState(null);
-      console.log("clean up audio state");
     };
   }, [isLoading, !!data]);
   //useSWRが同じインスタンスを返さない?
@@ -239,18 +241,19 @@ export function useAudioManager(musicId: string, urls: Array<string | undefined 
   const baseState = useAudioState(1, urls ? urls[1] : null, audioCtx);
   const guiterState = useAudioState(2, urls ? urls[2] : null, audioCtx);
   const melodyState = useAudioState(3, urls ? urls[3] : null, audioCtx);
-
   const [isAllPlaying, setAllPlaying] = useState(false);
   const [allPlayState, setAllPlayState] = useState<AudioState | null>(null);
+  const haveURL = urls?.filter((it) => it)?.length ?? false;
+  const allLoadended = haveURL ? (dramState?.isLoadEnded() ?? true) && (baseState?.isLoadEnded() ?? true) && (guiterState?.isLoadEnded() ?? true) && (melodyState?.isLoadEnded() ?? true) : false;
+
   useEffect(() => {
-    const melodyState = new AudioState(4, false, (playing) => setAllPlaying(playing), null);
-    setAllPlayState(melodyState);
+    const allPlayState = new AudioState(4, !allLoadended, (playing) => setAllPlaying(playing), null);
+    setAllPlayState(allPlayState);
     return () => {
-      melodyState.setPlaying(false, false, false);
+      allPlayState.setPlaying(false, false, false);
       setAllPlayState(null);
-      console.log("url changed");
     };
-  }, [urls]);
+  }, [urls, allLoadended]);
 
   const [audioManager, setAudioManager] = useState<AudioManager | null>(null);
   useEffect(() => {

@@ -5,8 +5,9 @@ import { InfiniteScrollViewer, PlayButton, SpinningLoader } from "./utlis";
 import { useRouter } from "next/router";
 import { useGoodCounter, useGoodHistory, useInvolvedMusic, useMusicDetail, useThumbnailURL, useTrackURL, useTrackURLs, useUploadedMusic, useViewCounter } from "@/hooks/music";
 import { indexToPartName } from "@/libs/utils";
-import { useAudioManager } from "@/hooks/audioManager";
+import { AudioManager, useAudioManager } from "@/hooks/audioManager";
 import { useProfileImage, useProfileImageById } from "@/hooks/profile";
+import { list } from "postcss";
 
 export function JumpableMusicPreviewById({ musicId }: { musicId: string }) {
   const { data, isLoading } = useMusicDetail(musicId);
@@ -46,21 +47,11 @@ export function PlayableMusicPreview({ music }: { music: Music }) {
             router.push(`/music/${music.id}`);
           }
         }}
-        className="cursor-pointer hover:bg-hprimary p-1 rounded-md"
+        className="cursor-pointer hover:bg-hprimary p-1 rounded-md border border-secondary m-1 mb-2"
       >
         <MusicPreview music={music}></MusicPreview>
         <MusicInfo music={music} inclementViewCount={inclementViewCount}></MusicInfo>
-        <TrackPlayer
-          playing={audioManager?.isPlaying(4) ?? false}
-          text="全て再生"
-          key={100}
-          onClick={(e) => {
-            e.stopPropagation();
-            audioManager?.togglePlayPoseAll();
-          }}
-          noImage={true}
-          isLoadEnded={true}
-        ></TrackPlayer>
+        <AllPlayTrackPlayer audioManager={audioManager}></AllPlayTrackPlayer>
       </div>
     </>
   );
@@ -123,34 +114,68 @@ export function MusicInfo({ music, className = "", inclementViewCount }: { music
 }
 
 export function MusicPlayer({ music }: { music: Music }) {
-  const size = music.musicRefs.length;
   const { data: urls } = useTrackURLs(music);
 
   const audioManager = useAudioManager(music.id, urls);
   return (
     <ul>
-      {(() => {
-        const list = [];
-        for (let i = 0; i < size; i++) {
-          list.push(
-            <TrackPlayer
-              playing={audioManager?.isPlaying(i) ?? false}
-              text={indexToPartName(i)}
-              key={i}
-              onClick={() => audioManager?.togglePlayPose(i)}
-              isLoadEnded={audioManager?.isLoadEnded(i) ?? false}
-              authorUid={music.authorIDs[i]}
-            ></TrackPlayer>
-          );
-        }
-        return list;
-      })()}
-      <TrackPlayer playing={audioManager?.isPlaying(4) ?? false} text="全て再生" key={100} onClick={() => audioManager?.togglePlayPoseAll()} noImage={true} isLoadEnded={true}></TrackPlayer>
+      <MultipleTrackPlayer size={music.authorIDs.length} audioManager={audioManager} authorIDs={music.authorIDs}></MultipleTrackPlayer>
+      <AllPlayTrackPlayer audioManager={audioManager}></AllPlayTrackPlayer>
     </ul>
   );
 }
 
-export function TrackPlayer({
+/**
+ * 登録されたパート全ての再生用のコンポーネント
+ * authorIDs:undefined->描画待機 null->画像なし
+ * @param param0
+ */
+export function MultipleTrackPlayer({ size, authorIDs, audioManager }: { size: number; authorIDs: Array<string | undefined | null>; audioManager: AudioManager | null }) {
+  const list = [];
+  for (let i = 0; i < size; i++) {
+    var authorID = authorIDs[i];
+    const noImage = authorID === null;
+    authorID = authorID === null ? undefined : authorID;
+    list.push(
+      <TrackPlayer
+        playing={audioManager?.isPlaying(i) ?? false}
+        text={indexToPartName(i)}
+        key={i}
+        onClick={(e) => {
+          e.stopPropagation();
+          audioManager?.setPlay(i, !audioManager.isPlaying(i));
+        }}
+        isLoadEnded={audioManager?.isLoadEnded(i) ?? false}
+        authorUid={authorID}
+        noImage={noImage}
+      ></TrackPlayer>
+    );
+  }
+  return list;
+}
+
+/**
+ * 一括再生用のコンポーネント
+ * @param param0
+ * @returns
+ */
+export function AllPlayTrackPlayer({ audioManager }: { audioManager: AudioManager | null }) {
+  return (
+    <TrackPlayer
+      playing={audioManager?.isPlaying(4) ?? false}
+      text="全て再生"
+      key={100}
+      onClick={(e) => {
+        e.stopPropagation();
+        audioManager?.setPlayAll(!audioManager.isPlayingAll());
+      }}
+      noImage={true}
+      isLoadEnded={audioManager?.isLoadEnded(4) ?? false}
+    ></TrackPlayer>
+  );
+}
+
+function TrackPlayer({
   onClick,
   playing,
   text,

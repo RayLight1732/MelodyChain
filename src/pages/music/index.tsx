@@ -28,7 +28,7 @@ export default function Dispatched(): ReactElement {
     );
   } else if (dispatchedMusic.getState() === FetchStatus.SUCCESS) {
     const content = dispatchedMusic.getContent();
-    if (content) {
+    if (content && !content.isUploaded() && content.getLimit() > new Date()) {
       return (
         <>
           <div className="p-5">
