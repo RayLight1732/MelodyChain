@@ -1,17 +1,19 @@
 import { onAuthStateChanged, signOut } from "@/libs/auth";
-import React, { Dispatch, ReactNode, SetStateAction, useEffect, useMemo, useState } from "react";
+import React, { Dispatch, ReactNode, SetStateAction, useEffect, useMemo, useRef, useState } from "react";
 import Login from "./login";
 import { Loading } from "./loading";
 import Link from "next/link";
 import { auth } from "@/libs/initialize";
-import { useMyProfile, useMyProfileImage } from "./profile";
+import { useMyProfile, useMyProfileImage, useMyUid } from "./profile";
 import dynamic from "next/dynamic";
 import { Profile } from "@/libs/profile";
 import { useNotifications } from "@/hooks/notificationProvider";
 import { subscribeLastWatchTime } from "@/libs/notification";
 import { useRouter } from "next/router";
+import { list } from "postcss";
 
-export function Header() {
+export function Header({ showBackButton = false }: { showBackButton?: boolean }) {
+  const uid = useMyUid();
   const [profile] = useMyProfile();
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const notifications = useNotifications();
@@ -38,35 +40,39 @@ export function Header() {
   }, [lastWatchTime, notifications]);
 
   return (
-    <header className="flex justify-between items-center px-5 py-2.5 border-b-2 divide-solid border-accent bg-primary z-50">
-      <div
-        className="cursor-pointer"
-        onClick={() => {
-          setSidebarOpen(true);
-        }}
-      >
-        <img src="/images/logo_small.png" alt="" className="w-[60px] h-[60px]" />
-      </div>
-      <div className="relative cursor-pointer">
-        <img
-          src="/images/bell.png"
-          alt=""
+    <header className="border-b-2 divide-solid border-accent z-50">
+      <div className="flex justify-between items-center px-5 py-2.5 bg-primary">
+        <div
+          className="cursor-pointer"
           onClick={() => {
-            router.push("/notification");
+            setSidebarOpen(true);
           }}
-        />
-        {newNotisCount != 0 ? (
-          <div className="outline outline-2 outline-primary bg-[#ef5350] rounded-full absolute bottom-0 right-0 w-5 h-5 flex items-center justify-center transform translate-x-1/2 translate-y-1/2 ">
-            <p className="text-sm text-primary">{newNotisCount}</p>
-          </div>
-        ) : null}
+        >
+          <img src="/images/logo_small.png" alt="" className="w-[60px] h-[60px]" />
+        </div>
+        <div className="relative cursor-pointer">
+          <img
+            src="/images/bell.png"
+            alt=""
+            onClick={() => {
+              router.push("/notification");
+            }}
+          />
+          {newNotisCount != 0 ? (
+            <div className="outline outline-2 outline-primary bg-[#ef5350] rounded-full absolute bottom-0 right-0 w-5 h-5 flex items-center justify-center transform translate-x-1/2 translate-y-1/2 ">
+              <p className="text-sm text-primary">{newNotisCount}</p>
+            </div>
+          ) : null}
+        </div>
       </div>
       <Sidebar setSidebarOpen={setSidebarOpen} isSidebarOpen={isSidebarOpen} profile={profile.getContent()}></Sidebar>
+      {showBackButton ? <BackButton isFirstTime={false}></BackButton> : null}
     </header>
   );
 }
 
 function Sidebar({ setSidebarOpen, isSidebarOpen, profile }: { profile: Profile | null; isSidebarOpen: boolean; setSidebarOpen: Dispatch<SetStateAction<boolean>> }) {
+  const rounter = useRouter();
   return (
     <div
       className={`top-0 left-0 h-full w-full absolute bg-black/40 z-50 transition-opacity duration-300 ${isSidebarOpen ? "opacity-100" : "opacity-0 pointer-events-none"}`}
@@ -77,6 +83,15 @@ function Sidebar({ setSidebarOpen, isSidebarOpen, profile }: { profile: Profile 
       <div className={`h-full bg-primary transition-transform duration-300 transform ${isSidebarOpen ? "translate-x-0 w-48" : "-translate-x-full w-0"}`}>
         <div className="px-1 py-2.5 space-y-3">
           <p className="mx-5 text-xl font-semibold">{profile?.name}</p>
+
+          {/* <button
+            className="font-semibold hover:bg-hsecondary w-full text-left px-6 py-1 rounded-md"
+            onClick={() => {
+              rounter.push("/settings");
+            }}
+          >
+            設定
+          </button> */}
           <button
             className="font-semibold hover:bg-hsecondary w-full text-left px-6 py-1 rounded-md"
             onClick={() => {
@@ -86,6 +101,27 @@ function Sidebar({ setSidebarOpen, isSidebarOpen, profile }: { profile: Profile 
             ログアウト
           </button>
         </div>
+      </div>
+    </div>
+  );
+}
+
+function BackButton({ isFirstTime }: { isFirstTime: boolean }) {
+  const router = useRouter();
+
+  return (
+    <div className="w-full border-t-2 border-secondary pl-1">
+      <div
+        className="rounded-full w-10 h-10 hover:bg-hprimary relative cursor-pointer"
+        onClick={() => {
+          if (isFirstTime) {
+            router.push("/");
+          } else {
+            router.back();
+          }
+        }}
+      >
+        <div className="bg-back w-10 h-10 absolute -translate-x-[1px] blur-0"></div>
       </div>
     </div>
   );
@@ -123,11 +159,13 @@ export function AuthStateManager({
   onNotAuthenticated,
   requireProfile = false,
   children,
+  showBackButton = false,
 }: {
   onAuthenticated?: () => void;
   onNotAuthenticated?: () => void;
   requireProfile?: boolean;
   children: ReactNode;
+  showBackButton?: boolean;
 }) {
   //authState:0->init
   //authState:1->logined
@@ -161,7 +199,7 @@ export function AuthStateManager({
     return loadingComponent;
   } else if (authState == 1) {
     return (
-      <DataProvider loadingComponent={loadingComponent} requireProfile={requireProfile} uid={auth.currentUser!.uid}>
+      <DataProvider showBackButton={showBackButton} loadingComponent={loadingComponent} requireProfile={requireProfile} uid={auth.currentUser!.uid}>
         {children}
       </DataProvider>
     );

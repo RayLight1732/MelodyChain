@@ -8,7 +8,19 @@ import { MusicCacheMapContextProvider } from "@/hooks/music";
 import { FCMTokenContextProvider } from "@/hooks/fcmToken";
 import { NotificationContextProvider } from "@/hooks/notificationProvider";
 
-export default function DataProvider({ uid, requireProfile, loadingComponent, children }: { uid: string; requireProfile: boolean; loadingComponent: ReactNode; children: ReactNode }) {
+export default function DataProvider({
+  uid,
+  requireProfile,
+  loadingComponent,
+  children,
+  showBackButton = false,
+}: {
+  uid: string;
+  requireProfile: boolean;
+  loadingComponent: ReactNode;
+  children: ReactNode;
+  showBackButton?: boolean;
+}) {
   const scrollOriginRef = useRef<HTMLDivElement | null>(null);
   return (
     <AudioContextProvider>

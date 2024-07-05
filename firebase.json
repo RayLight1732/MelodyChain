@@ -30,6 +30,9 @@
       {
         "regex":"^/notification(?:/)?$",
         "destination":"/notification.html"
+      },{
+        "regex":"^/settings(?:/)?$",
+        "destination":"/settings.html"
       }
     ]
   }

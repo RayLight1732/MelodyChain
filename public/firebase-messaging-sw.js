@@ -14,6 +14,9 @@ const firebaseConfig = {
   appId: "1:826270602514:web:f54ce41f6ab7538fe08fcb",
 };
 
+var dispatchNotification = true;
+var composedNotification = true;
+
 firebase.initializeApp(firebaseConfig);
 
 const messaging = firebase.messaging();
@@ -22,12 +25,17 @@ messaging.onBackgroundMessage((payload) => {
   console.log("on background message");
   // console.log('[firebase-messaging-sw.js] Received background message ', payload);
 
-  const { title, body, image, icon, ...restPayload } = payload.data;
+  const { title, body, image, icon, type, ...restPayload } = payload.data;
   const notificationOptions = {
     body,
-    icon: image || "/icons/firebase-logo.png", // path to your "fallback" firebase notification logo
+    icon: image || "/icon-256x256.png", // path to your "fallback" firebase notification logo
     data: restPayload,
   };
+  if (type == 0 && !dispatchNotification) {
+    return;
+  } else if (type == 1 && !composedNotification) {
+    return;
+  }
   return self.registration.showNotification(title, notificationOptions);
 });
 

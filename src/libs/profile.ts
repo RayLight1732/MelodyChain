@@ -11,14 +11,16 @@ export class DispatchedMusic {
   private dataRef: string; //アップロード先
   private tempo: number;
   private limit: Date;
+  private uploaded: boolean;
 
-  constructor(data: any) {
+  constructor(data: any, uploaded: boolean) {
     this.part = data.part;
     this.authorIds = data.authorIDs;
     this.previousRefs = data.previousRefs;
     this.dataRef = data.dataRef;
     this.tempo = data.tempo;
     this.limit = data.limit.toDate();
+    this.uploaded = uploaded;
   }
 
   getPart = () => this.part;
@@ -31,6 +33,7 @@ export class DispatchedMusic {
   getTempo = () => this.tempo;
 
   getLimit = () => this.limit;
+  isUploaded = () => this.uploaded;
 }
 
 export class Profile {
@@ -61,7 +64,7 @@ export class Profile {
       if (data.dispatch) {
         console.log("dispatch", data.dispatch);
         if (data.dispatch.state == "dispatched") {
-          dispatchedMusic = new DispatchedMusic(data.dispatch);
+          dispatchedMusic = new DispatchedMusic(data.dispatch, data.uploaded);
         }
       }
       return new Profile(data.uid, data.name, data.favorite, data.part, data.created_date.toDate(), dispatchedMusic);
