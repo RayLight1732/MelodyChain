@@ -90,7 +90,7 @@ export function MusicInfo({ music, className = "", inclementViewCount }: { music
   const viewCount = useViewCounter(music, inclementViewCount);
   return (
     <div className={"w-full flex justify-between px-4 " + className}>
-      <p className="bg-secondary rounded-full px-4 py-2">{fmt.format(viewCount)}回試聴</p>
+      <p className="bg-secondary rounded-full px-4 py-2">{fmt.format(viewCount)}回再生</p>
       <div
         onClick={(e) => {
           e.stopPropagation();
@@ -248,13 +248,11 @@ export function GoodHistory({ uid, loadFirst = false }: { uid: string; loadFirst
 
 export function InvolvedMusic({ uid, loadFirst = false }: { uid: string; loadFirst?: boolean }) {
   const { history, loadNext } = useInvolvedMusic(uid);
-  const router = useRouter();
   useEffect(() => {
     if (loadFirst) {
       loadNext();
     }
   }, []);
-  useScrollHistory("involved/" + router.pathname);
   return (
     <InfiniteScrollViewer
       loadNext={loadNext}
@@ -267,8 +265,6 @@ export function InvolvedMusic({ uid, loadFirst = false }: { uid: string; loadFir
 
 export function UploadedMusic() {
   const { history, loadNext } = useUploadedMusic();
-  const router = useRouter();
-  useScrollHistory(router.pathname);
   return (
     <InfiniteScrollViewer
       loadNext={loadNext}

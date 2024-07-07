@@ -67,7 +67,7 @@ export class Profile {
           dispatchedMusic = new DispatchedMusic(data.dispatch, data.uploaded);
         }
       }
-      return new Profile(data.uid, data.name, data.favorite, data.part, data.created_date.toDate(), dispatchedMusic);
+      return new Profile(data.uid, data.name, data.favorite, data.part, data.created_date?.toDate(), dispatchedMusic);
     } else {
       return null;
     }

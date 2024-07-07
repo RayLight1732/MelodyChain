@@ -151,10 +151,10 @@ function PartDisplay({ profile }: { profile?: Profile | null }) {
       if (playPart) {
         return <li key={index}>{indexToPartName(index)}</li>;
       } else {
-        return <></>;
+        return null;
       }
     });
   } else {
-    return <></>;
+    return null;
   }
 }

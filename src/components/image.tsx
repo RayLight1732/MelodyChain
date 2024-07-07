@@ -87,7 +87,8 @@ export function CropAreaSelector({ src, areaRef, exportRatio, rounded = false }:
   useEffect(() => {
     setTranslate([clampTranslateX(translate[0]!, ratio), clampTranslateY(translate[1]!, ratio, naturalRatio, exportRatio)]);
   }, [ratio]);
-
+  const touchstart_bar = useRef(0);
+  const touchmove_bar = useRef(0);
   return (
     <div className={" bg-primary z-[101] relative w-full flex-grow select-none h-full"} style={{ clipPath: "polygon(0% 0%,0% 100%,100% 100%, 100% 0%)" }} ref={parentContainerRef}>
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-full" style={{ width: widthRatio + "%" }}>
@@ -122,6 +123,33 @@ export function CropAreaSelector({ src, areaRef, exportRatio, rounded = false }:
           }}
           onWheel={(event) => {
             setRatio(Math.max(ratio + event.deltaY / 1000.0, calcFirstRatio(naturalRatio, exportRatio)));
+          }}
+          onTouchStart={(e) => {
+            if (e.touches.length > 1) {
+              //絶対値を取得
+              const w_abs_start = Math.abs(e.touches[1]!.pageX - e.touches[0]!.pageX);
+              const h_abs_start = Math.abs(e.touches[1]!.pageY - e.touches[0]!.pageY);
+              //はじめに2本指タッチした時の面積
+              touchstart_bar.current = w_abs_start * h_abs_start;
+            }
+          }}
+          onTouchMove={(e) => {
+            if (e.touches.length > 1) {
+              //絶対値を取得
+              const w_abs_move = Math.abs(e.touches[1]!.pageX - e.touches[0]!.pageX);
+              const h_abs_move = Math.abs(e.touches[1]!.pageY - e.touches[0]!.pageY);
+              //ムーブした時の面積
+              touchmove_bar.current = w_abs_move * h_abs_move;
+              //はじめに2タッチ面積からムーブした時の面積を引く
+              const area_bar = touchstart_bar.current - touchmove_bar.current;
+              if (area_bar < 0) {
+                //拡大する
+                setRatio(Math.max(ratio * 1.1, calcFirstRatio(naturalRatio, exportRatio)));
+              } else if (area_bar > 0) {
+                //縮小する
+                setRatio(Math.max(ratio * 0.9, calcFirstRatio(naturalRatio, exportRatio)));
+              }
+            }
           }}
         ></img>
       </div>
@@ -197,7 +225,7 @@ export function ImageCropDialog({
 
   return (
     <div
-      className="fixed top-0 left-0 h-screen right-0 bg-black bg-opacity-15 z-[100] flex justify-center items-center object-contain p-4"
+      className="fixed top-0 left-0 h-[100dvh] right-0 bg-black bg-opacity-15 z-[100] flex justify-center items-center object-contain p-4"
       onClick={() => {
         setDialogVisible(false);
       }}
@@ -209,18 +237,21 @@ export function ImageCropDialog({
         className="flex-grow h-full flex flex-col"
       >
         <div className="bg-primary flex-grow flex flex-col p-1">
-          <div onClick={() => setDialogVisible(false)}>←</div>
+          <div onClick={() => setDialogVisible(false)} className="bg-back w-10 h-10 mb-2 cursor-pointer hover:bg-hprimary rounded"></div>
           <CropAreaSelector src={src} areaRef={area} exportRatio={exportWidth / exportHeight} rounded={rounded}></CropAreaSelector>
-          <div
-            className="bg-primary"
-            onClick={() => {
-              cropImage(src, exportWidth, exportHeight, area.current, (blob) => {
-                blobRef.current = blob;
-                setDialogVisible(false);
-              });
-            }}
-          >
-            Test
+
+          <div className="bg-primary p-4 w-full flex justify-center">
+            <div
+              className=" cursor-pointer bg-black text-primary w-fit py-2 px-4 rounded-full text-xl disabled:bg-secondary"
+              onClick={() => {
+                cropImage(src, exportWidth, exportHeight, area.current, (blob) => {
+                  blobRef.current = blob;
+                  setDialogVisible(false);
+                });
+              }}
+            >
+              確定
+            </div>
           </div>
         </div>
       </div>

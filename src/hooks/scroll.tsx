@@ -59,7 +59,6 @@ export function useScrollHistory(key: string, scrollRef?: RefObject<HTMLElement 
     const handleScroll = () => {
       const scrollTop = scrollRef_?.current?.scrollTop;
       if (scrollTop && !ignore) {
-        console.log("set scroll", scrollTop);
         historyMap.getOrDefault(key).setScrollTop(scrollTop);
       }
     };

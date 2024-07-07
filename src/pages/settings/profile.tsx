@@ -21,8 +21,11 @@ export default function ProfileEditor() {
 
   const [isErrorDialogShown, showErrorDialog] = useState(false); //エラーが発生した時用
   const [isWarnDialogShown, showWarnDialog] = useState(false); //編集中のページ離脱警告
-
+  const submited = useRef(false);
   const showDialog = useCallback(() => {
+    if (submited.current) {
+      return false;
+    }
     return (
       !!profileBlobRef.current ||
       !!headerBlobRef.current ||
@@ -71,7 +74,13 @@ export default function ProfileEditor() {
             break;
           }
         }
-        router.push(`/profile/${profile.getContent()?.getUid()}`);
+        submited.current = true;
+        const uid = profile.getContent()?.getUid();
+        if (uid) {
+          router.push(`/profile/${uid}`);
+        } else {
+          router.push("/top");
+        }
       } catch (e) {
         console.error(e);
         showErrorDialog(true);
@@ -138,7 +147,7 @@ ProfileEditor.showBackButton = true;
 
 function PartSelector({ defaultValue = [], allPartState, setAllPartState }: { defaultValue?: Array<number>; allPartState: Array<number>; setAllPartState: Dispatch<SetStateAction<Array<number>>> }) {
   useEffect(() => {
-    if (defaultValue) {
+    if (defaultValue.length > 0) {
       setAllPartState(defaultValue);
     }
   }, [defaultValue]);
@@ -285,37 +294,41 @@ function ImageSection({
 }
 
 function HeaderImageDisplay({ headerImageURL }: { headerImageURL?: string | null }) {
+  var imagePart;
   if (headerImageURL) {
-    return (
-      <>
-        <img className="w-full aspect-[2.618/1] object-cover bg-gray-300" src={headerImageURL}></img>
-        <div className="absolute top-0 w-full aspect-[2.618/1] object-cover  bg-black bg-opacity-45 flex justify-center align-middle cursor-pointer">
-          <div className="m-auto h-[40%] aspect-square relative bg-primary rounded-full flex align-middle justify-center">
-            <img className="w-[50%]" src="/images/camera.svg"></img>
-          </div>
-        </div>
-      </>
-    );
+    imagePart = <img className="w-full aspect-[2.618/1] object-cover bg-gray-300" src={headerImageURL}></img>;
   } else {
-    return <div className="w-full aspect-[2.618/1] object-cover bg-gray-300"></div>;
+    imagePart = <div className="w-full aspect-[2.618/1] object-cover bg-gray-300"></div>;
   }
+  return (
+    <>
+      {imagePart}
+      <div className="absolute top-0 w-full aspect-[2.618/1] object-cover  bg-black bg-opacity-45 flex justify-center align-middle cursor-pointer">
+        <div className="m-auto h-[40%] aspect-square relative bg-primary rounded-full flex align-middle justify-center">
+          <img className="w-[50%]" src="/images/camera.svg"></img>
+        </div>
+      </div>
+    </>
+  );
 }
 
 function ProfileImageDisplay({ profileImageURL }: { profileImageURL?: string | null }) {
+  var imagePart;
   if (profileImageURL) {
-    return (
-      <>
-        <img className="absolute top-[70%] left-5 h-[61%] aspect-[1/1] bg-gray-500 rounded-full" src={profileImageURL}></img>
-        <div className="absolute top-[70%] left-5 h-[61%] aspect-[1/1] bg-black bg-opacity-45 rounded-full flex align-middle justify-center cursor-pointer">
-          <div className="m-auto w-[40%] aspect-square relative bg-primary rounded-full flex align-middle justify-center">
-            <img className="w-[50%]" src="/images/camera.svg"></img>
-          </div>
-        </div>
-      </>
-    );
+    imagePart = <img className="absolute top-[70%] left-5 h-[61%] aspect-[1/1] bg-gray-500 rounded-full" src={profileImageURL}></img>;
   } else {
-    return <div className="absolute top-[70%] left-5 h-[61%] aspect-[1/1] bg-gray-500 rounded-full cursor-pointer"></div>;
+    imagePart = <div className="absolute top-[70%] left-5 h-[61%] aspect-[1/1] bg-gray-500 rounded-full cursor-pointer"></div>;
   }
+  return (
+    <>
+      {imagePart}
+      <div className="absolute top-[70%] left-5 h-[61%] aspect-[1/1] bg-black bg-opacity-45 rounded-full flex align-middle justify-center cursor-pointer">
+        <div className="m-auto w-[40%] aspect-square relative bg-primary rounded-full flex align-middle justify-center">
+          <img className="w-[50%]" src="/images/camera.svg"></img>
+        </div>
+      </div>
+    </>
+  );
 }
 
 function isSame(part1?: Array<number>, part2?: Array<number>) {

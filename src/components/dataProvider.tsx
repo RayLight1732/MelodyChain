@@ -4,9 +4,10 @@ import { Footer, Header } from "./layout";
 import { ReactNode, useEffect, useRef, useState } from "react";
 import { AudioContextProvider } from "@/hooks/context";
 import { ScrollHostoryContextProvider } from "@/hooks/scroll";
-import { MusicCacheMapContextProvider } from "@/hooks/music";
+import { CountercacheContextProvider, MusicCacheMapContextProvider } from "@/hooks/music";
 import { FCMTokenContextProvider } from "@/hooks/fcmToken";
 import { NotificationContextProvider } from "@/hooks/notificationProvider";
+import ProfileEditor from "@/pages/settings/profile";
 
 export default function DataProvider({
   uid,
@@ -32,17 +33,19 @@ export default function DataProvider({
                 <ScrollHostoryContextProvider scrollOriginRef={scrollOriginRef}>
                   <ProfileLoadObserver requireProfile={requireProfile} loadingComponent={loadingComponent}>
                     <FCMTokenContextProvider>
-                      <NotificationContextProvider>
-                        <ProfileLoadObserver requireProfile={requireProfile} loadingComponent={loadingComponent}>
-                          <div className="bg-primary flex flex-col w-screen max-w-[30rem] mx-auto h-[100dvh]">
-                            <Header></Header>
-                            <div className="flex-grow overflow-y-auto w-screen max-w-[30rem]" id="container">
-                              {children}
+                      <CountercacheContextProvider>
+                        <NotificationContextProvider>
+                          <ProfileLoadObserver requireProfile={requireProfile} loadingComponent={loadingComponent}>
+                            <div className="bg-primary flex flex-col w-screen max-w-[30rem] mx-auto h-[100dvh]">
+                              <Header showBackButton={showBackButton}></Header>
+                              <div ref={scrollOriginRef} className="flex-grow overflow-y-auto w-screen max-w-[30rem]" id="container">
+                                {children}
+                              </div>
+                              <Footer></Footer>
                             </div>
-                            <Footer></Footer>
-                          </div>
-                        </ProfileLoadObserver>
-                      </NotificationContextProvider>
+                          </ProfileLoadObserver>
+                        </NotificationContextProvider>
+                      </CountercacheContextProvider>
                     </FCMTokenContextProvider>
                   </ProfileLoadObserver>
                 </ScrollHostoryContextProvider>
@@ -65,13 +68,14 @@ function ProfileLoadObserver({ requireProfile, loadingComponent, children }: { r
   const [myProfile] = useMyProfile();
   const [myProfileImage] = useMyProfileImage();
   const [myHeaderImage] = useMyHeaderImage();
-
-  if (requireProfile) {
-    if (myProfile.getState() == FetchStatus.INIT || myProfileImage.getState() == FetchStatus.INIT || myHeaderImage.getState() == FetchStatus.INIT) {
-      return loadingComponent;
-    } else {
-      return children;
-    }
+  if (myProfile.getState() == FetchStatus.SUCCESS && myProfile.getContent() == null) {
+    return (
+      <div className="bg-primary flex flex-col w-screen max-w-[30rem] mx-auto h-[100dvh]">
+        <ProfileEditor></ProfileEditor>
+      </div>
+    );
+  } else if (myProfile.getState() == FetchStatus.INIT || myProfileImage.getState() == FetchStatus.INIT || myHeaderImage.getState() == FetchStatus.INIT) {
+    return loadingComponent;
   } else {
     return children;
   }

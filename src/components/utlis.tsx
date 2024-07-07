@@ -1,3 +1,4 @@
+import { useScrollHistory } from "@/hooks/scroll";
 import { useRouter } from "next/router";
 import { Dispatch, ForwardedRef, MouseEventHandler, MutableRefObject, ReactElement, SetStateAction, forwardRef, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
@@ -227,6 +228,13 @@ export function InfiniteScrollViewer({ loaded, root, loadNext }: InfiniteScrollV
   const observerTarget = useRef<HTMLDivElement | null>(null);
   const isLoading = useRef(false);
   const hasNext = useRef(true);
+
+  const router = useRouter();
+  const history = useScrollHistory(window.location.href);
+  useEffect(() => {
+    root?.scrollTo({ top: history.getScrollTop() });
+  }, [window.location.href]);
+
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {

@@ -11,6 +11,7 @@ import { useNotifications } from "@/hooks/notificationProvider";
 import { subscribeLastWatchTime } from "@/libs/notification";
 import { useRouter } from "next/router";
 import { list } from "postcss";
+import DataProvider from "./dataProvider";
 
 export function Header({ showBackButton = false }: { showBackButton?: boolean }) {
   const uid = useMyUid();
@@ -129,19 +130,23 @@ function BackButton({ isFirstTime }: { isFirstTime: boolean }) {
 
 export function Footer() {
   const profileURL: string = useMyProfileImage()[0].getContent() ?? "/images/tmp-profile.png";
+  const uid = useMyUid();
+  const router = useRouter();
+  const uidFromURL = router.query.profile as string;
+  console.log(router.asPath);
   return (
     <footer className="grid grid-cols-3 px-5 py-2.5 border-t-2 divide-solid border-accent bg-primary z-40">
-      <div>
+      <div className={router.asPath == "/top" ? "bg-hsecondary rounded-full" : ""}>
         <Link href="/top" className="text-center flex justify-center h-full">
           <img src="/images/home.svg" className="w-[35px] h-[35px] m-auto block" alt="top" />
         </Link>
       </div>
-      <div>
+      <div className={router.asPath == "/music" ? "bg-hsecondary rounded-full" : ""}>
         <Link href="/music">
           <img src="/images/headphones.png" className="w-[45px] h-[45px] m-auto" alt="detail" />
         </Link>
       </div>
-      <div>
+      <div className={uidFromURL == uid ? "bg-hsecondary rounded-full" : ""}>
         <Link href={`/profile/${auth.currentUser?.uid}`}>
           <img src={profileURL} className="w-[45px] h-[45px] rounded-full m-auto" alt="profile" />
         </Link>
@@ -149,10 +154,6 @@ export function Footer() {
     </footer>
   );
 }
-
-const DataProvider = dynamic(() => import("./dataProvider"), {
-  loading: () => <p>Loading...</p>,
-});
 
 export function AuthStateManager({
   onAuthenticated,

@@ -132,12 +132,32 @@ interface GoodCounter {
   setPressed: (pressed: boolean) => void;
 }
 
+const counterCacheContext = createContext<[{ [id: string]: number }, (key: string, value: number) => void]>([{}, () => {}]);
+
+export function CountercacheContextProvider({ children }: { children: ReactNode }) {
+  const ref = useRef<{ [id: string]: number }>({});
+  const f = useCallback((key: string, value: number) => {
+    ref.current[key] = value;
+  }, []);
+  return <counterCacheContext.Provider value={[ref.current, f]}>{children}</counterCacheContext.Provider>;
+}
+
+function useCounterCacheContext(id: string): [number, (value: number) => void] {
+  const [cacheDict, setCache] = useContext(counterCacheContext);
+  const value = id in cacheDict ? cacheDict[id]! : 0;
+  return [value, (value: number) => setCache(id, value)];
+}
+
 export function useGoodCounter(music: Music): GoodCounter {
   const uid = useMyUid();
-  const [count, setCount] = useState(0);
+  const [cache, setCache] = useCounterCacheContext(music.id + "/good");
+  const [count, setCount] = useState(cache);
   const [isPressed, setPressed] = useState(false);
   useEffect(() => {
-    const unsubscriber1 = subscribeGoodCounter(music, setCount);
+    const unsubscriber1 = subscribeGoodCounter(music, (value) => {
+      setCount(value);
+      setCache(value);
+    });
     const unsubscriber2 = subscribeGoodCounterPressed(music, uid, (isPressed) => {
       setPressed(isPressed);
     });
@@ -158,8 +178,8 @@ export function useGoodCounter(music: Music): GoodCounter {
 
 export function useViewCounter(music: Music, inclement: boolean): number {
   const uid = useMyUid();
-
-  const [count, setCount] = useState(0);
+  const [cache, setCache] = useCounterCacheContext(music.id + "/view");
+  const [count, setCount] = useState(cache);
   useEffect(() => {
     const unsubscriber1 = subscribeViewedMusic(music, uid, (viewed) => {
       console.log(viewed);
@@ -167,7 +187,10 @@ export function useViewCounter(music: Music, inclement: boolean): number {
         incrementViewCount(music, uid);
       }
     });
-    const unsubscriber2 = subscribeViewCounter(music, setCount);
+    const unsubscriber2 = subscribeViewCounter(music, (value) => {
+      setCount(value);
+      setCache(value);
+    });
     return () => {
       unsubscriber1();
       unsubscriber2();
